@@ -134,3 +134,4 @@ input/
 output/
 *.pth
 *.dat
+*.ipynb

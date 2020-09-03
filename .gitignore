@@ -129,6 +129,8 @@ dmypy.json
 .pyre/
 
 __pycache__/
+.idea/
 input/
 output/
 *.pth
+*.dat

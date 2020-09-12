@@ -1,18 +1,12 @@
 # Face Recognition
 Real-time face recognition in unconstrained environments
 
-
 This module can get a number of names as input for tracking the specific face.
 
 ## Installation
 
 1. clone the repository
-2. create the conda environment: `conda env create -f MultiFace.yml`
-3. activate the environment: `conda activate MultiFace`
-4. test the environment: `conda env list`
-5. install *faceai*: `pip install faceai-0.3.8-py3-none-any.whl`
-6. download required model files: `python downloadmodels.py`
-
+2. download required model files: `python downloadmodels.py`
 
 ## Test and run
 Put all of your desired input videos in ./video directory. The output will be saved in ./result. 

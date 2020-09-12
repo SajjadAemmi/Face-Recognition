@@ -1,10 +1,18 @@
 from os.path import normpath, abspath, join, dirname, realpath
-
 from easydict import EasyDict as edict
 from pathlib import Path
 import torch
 from torch.nn import CrossEntropyLoss
 from torchvision import transforms as trans
+
+config = {'trained_model_path': join('src', 'weights', 'mobilenet0.25_Final.pth'),
+          'network_type': 'mobile0.25',
+          'confidence_threshold': 0.02,
+          'top_k': 5000,
+          'nms_threshold': 0.4,
+          'keep_top_k': 750,
+          'vis_threshold': 0.5,
+          'threshold': 1.15}
 
 def get_config(training = True):
     conf = edict()

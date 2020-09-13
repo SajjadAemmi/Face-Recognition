@@ -1,4 +1,4 @@
-from src.data.data_pipe import de_preprocess, get_train_loader, get_val_data
+from src.retina_face.data.data_pipe import de_preprocess, get_train_loader, get_val_data
 from src.model import Backbone, Arcface, MobileFaceNet, Am_softmax, l2_norm
 from src.verifacation import evaluate
 import torch
@@ -16,7 +16,6 @@ import bcolz
 
 class face_learner(object):
     def __init__(self, conf, inference=False):
-        print(conf)
         if conf.use_mobilfacenet:
             self.model = MobileFaceNet(conf.embedding_size).to(conf.device)
             print('MobileFaceNet model generated')

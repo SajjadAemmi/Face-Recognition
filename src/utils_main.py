@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 import io
 from torchvision import transforms as trans
-from src.data.data_pipe import de_preprocess
+from src.retina_face.data.data_pipe import de_preprocess
 import torch
 from src.model import l2_norm
 import pdb

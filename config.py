@@ -16,7 +16,8 @@ config = {'trained_model_path': join('src', 'weights', 'mobilenet0.25_Final.pth'
 
 def get_config(training = True):
     conf = edict()
-    data_path = normpath(abspath(join(dirname(realpath(__file__)), 'src/data')))
+
+    data_path = normpath(abspath(join(dirname(realpath(__file__)), 'src/retina_face/data')))
     work_path = normpath(abspath(join(dirname(realpath(__file__)), 'src/work_space/')))
     conf.data_path = Path(data_path)
     conf.work_path = Path(work_path)
@@ -25,6 +26,7 @@ def get_config(training = True):
     conf.save_path = conf.work_path/'save'
     conf.input_size = [112, 112]
     conf.input_size = [256, 256]
+    conf.face_landmarks_path = "./src/models/shape_predictor_68_face_landmarks.dat"
 
     conf.embedding_size = 512
     conf.use_mobilfacenet = False

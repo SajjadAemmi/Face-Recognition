@@ -1,4 +1,4 @@
-from src.retina_face.data.data_pipe import de_preprocess, get_train_loader, get_val_data
+from retina_face.data.data_pipe import de_preprocess, get_train_loader, get_val_data
 from src.model import Backbone, Arcface, MobileFaceNet, Am_softmax, l2_norm
 from src.verifacation import evaluate
 import torch
@@ -12,7 +12,7 @@ from src.utils_main import get_time, gen_plot, hflip_batch, separate_bn_paras
 from PIL import Image
 from torchvision import transforms as trans
 import math
-import bcolz
+
 
 class face_learner(object):
     def __init__(self, conf, inference=False):

@@ -4,13 +4,14 @@ import torch
 import torch.backends.cudnn as cudnn
 import numpy as np
 
-from src.retina_face.data.config import cfg_mnet, cfg_re50
-from src.retina_face.models.retinaface import RetinaFace
-from src.retina_face.utils.timer import Timer
-from src.retina_face.layers.functions.prior_box import PriorBox
-from src.retina_face.utils.box_utils import decode, decode_landm
-from src.retina_face.utils.nms.py_cpu_nms import py_cpu_nms
+from retina_face.data.config import cfg_mnet, cfg_re50
+from retina_face.models.retinaface import RetinaFace
+from retina_face.utils.timer import Timer
+from retina_face.layers.functions.prior_box import PriorBox
+from retina_face.utils.box_utils import decode, decode_landm
+from retina_face.utils.nms.py_cpu_nms import py_cpu_nms
 from src.mtcnn_pytorch.src.align_trans import warp_and_crop_face
+
 
 class RetinaFaceModel:
     def __init__(self,

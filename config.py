@@ -17,7 +17,7 @@ config = {'trained_model_path': join('src', 'weights', 'mobilenet0.25_Final.pth'
 def get_config(training = True):
     conf = edict()
 
-    data_path = normpath(abspath(join(dirname(realpath(__file__)), 'src/retina_face/data')))
+    data_path = normpath(abspath(join(dirname(realpath(__file__)), 'retina_face/data')))
     work_path = normpath(abspath(join(dirname(realpath(__file__)), 'src/work_space/')))
     conf.data_path = Path(data_path)
     conf.work_path = Path(work_path)
@@ -34,10 +34,8 @@ def get_config(training = True):
     conf.drop_ratio = 0.6
     conf.net_mode = 'ir_se' # or 'ir'
     conf.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    conf.test_transform = trans.Compose([
-                    trans.ToTensor(),
-                    trans.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
-                ])
+    conf.test_transform = trans.Compose([trans.ToTensor(),
+                                         trans.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])])
     conf.data_mode = 'emore'
     conf.vgg_folder = conf.data_path/'faces_vgg_112x112'
     conf.ms1m_folder = conf.data_path/'faces_ms1m_112x112'

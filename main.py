@@ -7,7 +7,7 @@ from config import get_config, config
 from src.mtcnn_pytorch.src.align_trans import get_reference_facial_points
 from src.Learner import face_learner
 from src.utils_main import load_facebank, prepare_facebank, draw_box_name
-from retina_face import RetinaFaceModel
+from retina_face.retina_face import RetinaFaceModel
 
 
 class FaceRecognizer:
@@ -55,17 +55,11 @@ class FaceRecognizer:
         height = int(height // 2)
 
         if save:
-            if output_video.endswith('mp4'):
-                fourcc = cv2.VideoWriter_fourcc(*'mp4V')
-            else:
-                fourcc = cv2.VideoWriter_fourcc(*'MPEG')
             video_writer = cv2.VideoWriter(output_video,
-                                           fourcc,
+                                           cv2.VideoWriter_fourcc(*'mp4V'),
                                            # cv2.VideoWriter_fourcc(*'H264'),
                                            fps,
                                            (width, height))
-            print(video_writer)
-            # frame rate 6 due to my laptop is quite slow...
 
         frame_count = 0
         while vidcap.isOpened():
@@ -75,18 +69,6 @@ class FaceRecognizer:
                 frame_count += 1
                 print("processing frame {} ...".format(frame_count))
 
-                # image = Image.fromarray(frame)
-                # try:
-                #     bboxes, faces = self.mtcnn.align_multi(image,
-                #                                            self.conf.face_limit,
-                #                                            self.conf.min_face_size)
-                # except:
-                #     faces = []
-                #     bboxes = []
-
-                # print(faces)
-                # print("number of detected faces: {}".format(len(faces)))
-
                 bboxes_retina, faces_retina = self.retina_face.detect(frame, refrence)
                 print('number of detected faces: ', len(faces_retina))
 
@@ -95,37 +77,26 @@ class FaceRecognizer:
                     if show:
                      cv2.imshow('face Capture', frame)
                     continue
-                # print(landmarks_retina)
-
-                # bboxes = bboxes[:, :-1]  # shape:[10,4],only keep 10 highest possibiity faces
-                # bboxes = bboxes.astype(int)
-                # bboxes = bboxes + [-8, -8, 8, 8]  # personal choice
 
                 if type == "all":
-
-                 for bbox in bboxes_retina:
-                     frame = draw_box_name(bbox, "unknown", frame)
-
+                    for bbox in bboxes_retina:
+                        frame = draw_box_name(bbox, "unknown", frame)
                 else:
+                    results_retina, score_retina = self.learner.infer(self.conf, faces_retina, targets, self.tta)
+                    # print("retina results: {}".format(results_retina))
+                    # print("retina score: {}".format(score_retina))
 
-                 results_retina, score_retina = self.learner.infer(self.conf, faces_retina, targets, self.tta)
-
-                 print("retina results: {}".format(results_retina))
-                 print("retina score: {}".format(score_retina))
-
-                 for idx, bbox in enumerate(bboxes_retina):
-                    name = names[results_retina[idx] + 1]
-                    if name != "Unknown":
-                        # print(name,name_trackers)
-                        # print (name in name_trackers)
-                        if name in name_trackers:
-                            frame = draw_box_name(bbox, names[results_retina[idx] + 1], frame)
-
+                    for idx, bbox in enumerate(bboxes_retina):
+                        name = names[results_retina[idx] + 1]
+                        if name != "Unknown":
+                            # print(name,name_trackers)
+                            # print (name in name_trackers)
+                            if name in name_trackers:
+                                frame = draw_box_name(bbox, names[results_retina[idx] + 1], frame)
+                            else:
+                                print('not in tracker!')
                         else:
-                            print('not in tracker!')
-                    else:
-                        print('Unknown!')
-
+                            print('Unknown!')
                 # except:
                 #     count_error+=1
                 #     print('detect error :'+str(count_error))
@@ -163,23 +134,6 @@ class FaceRecognizer:
         learner.model.eval()
         print('learner loaded')
         return learner
-
-    # @staticmethod
-    # def _process_image(image_input):
-    #     make_3D_fromImage(image_input)
-    #     Image_filename = str(image_input)
-    #     suffix = Image_filename[-4::]
-    #
-    #     # print(suffix)
-    #     print(Image_filename.replace(suffix, ''))
-    #
-    #     model3D_mesh_1 = sio.loadmat('{}_0_new.mat'.format(Image_filename.replace(suffix, '')))
-    #
-    #     vertices = model3D_mesh_1["vertices"]
-    #     triangles = model3D_mesh_1["triangles"]
-    #     colors = model3D_mesh_1["colors"]
-    #
-    #     return vertices, triangles, colors
 
 
 file_name = 'demo3.mp4'

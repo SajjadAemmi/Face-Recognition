@@ -1,10 +1,10 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.autograd import Variable
-from src.retina_face.utils.box_utils import match, log_sum_exp
-from src.retina_face.data.config import cfg_mnet
+from retina_face.utils.box_utils import match, log_sum_exp
+from retina_face.data.config import cfg_mnet
 GPU = cfg_mnet['gpu_train']
+
 
 class MultiBoxLoss(nn.Module):
     """SSD Weighted Loss Function

@@ -7,6 +7,7 @@ from retina_face.data.data_pipe import de_preprocess
 import torch
 from src.model import l2_norm
 import cv2
+import os
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 
@@ -69,8 +70,8 @@ def prepare_facebank(conf, model, mtcnn, tta = True):
     return embeddings, names
 
 def load_facebank(conf):
-    embeddings = torch.load(conf.facebank_path/'facebank.pth')
-    names = np.load(conf.facebank_path/'names.npy')
+    embeddings = torch.load(os.path.join(conf.facebank_path, 'facebank.pth'))
+    names = np.load(os.path.join(conf.facebank_path, 'names.npy'))
     return embeddings, names
 
 def face_reader(conf, conn, flag, boxes_arr, result_arr, learner, mtcnn, targets, tta):

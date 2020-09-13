@@ -9,6 +9,7 @@ import numpy as np
 from numpy.linalg import inv, norm, lstsq
 from numpy.linalg import matrix_rank as rank
 
+
 class MatlabCp2tormException(Exception):
     def __str__(self):
         return 'In File {}:{}'.format(

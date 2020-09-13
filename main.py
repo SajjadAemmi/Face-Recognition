@@ -57,9 +57,7 @@ class FaceRecognizer:
         if save:
             video_writer = cv2.VideoWriter(output_video,
                                            cv2.VideoWriter_fourcc(*'mp4V'),
-                                           # cv2.VideoWriter_fourcc(*'H264'),
-                                           fps,
-                                           (width, height))
+                                           fps, (width, height))
 
         frame_count = 0
         while vidcap.isOpened():

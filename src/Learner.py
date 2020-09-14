@@ -1,3 +1,4 @@
+import os
 from retina_face.data.data_pipe import de_preprocess, get_train_loader, get_val_data
 from src.model import Backbone, Arcface, MobileFaceNet, Am_softmax, l2_norm
 from src.verifacation import evaluate
@@ -6,12 +7,12 @@ from torch import optim
 import numpy as np
 from tqdm import tqdm
 from tensorboardX import SummaryWriter
-from matplotlib import pyplot as plt
-plt.switch_backend('agg')
 from src.utils import get_time, gen_plot, hflip_batch, separate_bn_paras
 from PIL import Image
 from torchvision import transforms as trans
 import math
+from matplotlib import pyplot as plt
+plt.switch_backend('agg')
 
 
 class face_learner(object):
@@ -77,11 +78,11 @@ class face_learner(object):
         if from_save_folder:
             save_path = conf.save_path
         else:
-            save_path = conf.model_path            
-        self.model.load_state_dict(torch.load(save_path/'model_{}'.format(fixed_str), map_location=torch.device('cpu')))
+            save_path = conf.model_path
+        self.model.load_state_dict(torch.load(os.path.join(save_path, f'model_{fixed_str}'), map_location=torch.device('cpu')))
         if not model_only:
-            self.head.load_state_dict(torch.load(save_path/'head_{}'.format(fixed_str)))
-            self.optimizer.load_state_dict(torch.load(save_path/'optimizer_{}'.format(fixed_str)))
+            self.head.load_state_dict(torch.load(os.path.join(save_path, f'head_{fixed_str}')))
+            self.optimizer.load_state_dict(torch.load(os.path.join(save_path, f'optimizer_{fixed_str}')))
         
     def board_val(self, db_name, accuracy, best_threshold, roc_curve_tensor):
         self.writer.add_scalar('{}_accuracy'.format(db_name), accuracy, self.step)

@@ -43,7 +43,7 @@ class FaceRecognizer:
     def generate(self, input_video, output_video, save, type, name_trackers, show):
         refrence = get_reference_facial_points(default_square=True)
 
-        print(refrence)
+        # print(refrence)
         targets, names = self._load_dataset()
 
         camera = dict()
@@ -128,9 +128,9 @@ class FaceRecognizer:
         learner = face_learner(self.conf, True)
         learner.threshold = self.learner_threshold
         if self.conf.device.type == 'cpu':
-            learner.load_state(self.conf, 'cpu_final.pth', True, True)
+            learner.load_state(self.conf, 'cpu_final.pth', False, True)
         else:
-            learner.load_state(self.conf, 'final.pth', True, True)
+            learner.load_state(self.conf, 'final.pth', False, True)
         learner.model.eval()
         print('learner loaded')
         return learner

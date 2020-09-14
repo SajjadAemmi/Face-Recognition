@@ -18,15 +18,11 @@ def get_config(training = True):
     conf = edict()
 
     data_path = normpath(abspath(join(dirname(realpath(__file__)), 'retina_face/data')))
-    work_path = normpath(abspath(join(dirname(realpath(__file__)), 'src/work_space/')))
     conf.data_path = Path(data_path)
-    conf.work_path = Path(work_path)
-    conf.model_path = conf.work_path/'models'
-    conf.log_path = conf.work_path/'log'
-    conf.save_path = conf.work_path/'save'
+    conf.model_path = './src/weights'
     conf.input_size = [112, 112]
     conf.input_size = [256, 256]
-    conf.face_landmarks_path = "./src/models/shape_predictor_68_face_landmarks.dat"
+    conf.face_landmarks_path = "./src/weights/shape_predictor_68_face_landmarks.dat"
 
     conf.embedding_size = 512
     conf.use_mobilfacenet = False
@@ -43,9 +39,7 @@ def get_config(training = True):
     conf.batch_size = 100 # irse net depth 50 
 #   conf.batch_size = 200 # mobilefacenet
 #--------------------Training Config ------------------------    
-    if training:        
-        conf.log_path = conf.work_path/'log'
-        conf.save_path = conf.work_path/'save'
+    if training:
     #     conf.weight_decay = 5e-4
         conf.lr = 1e-3
         conf.milestones = [12,15,18]
@@ -56,7 +50,7 @@ def get_config(training = True):
         conf.ce_loss = CrossEntropyLoss()    
 #--------------------Inference Config ------------------------
     else:
-        conf.dataset_path = 'dataset'
+        conf.dataset_path = Path('./dataset')
         conf.threshold = 1.5
         conf.face_limit = 10 
         #when inference, at maximum detect 10 faces in one image, my laptop is slow

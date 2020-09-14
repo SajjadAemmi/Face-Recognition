@@ -8,7 +8,7 @@ from tqdm import tqdm
 from tensorboardX import SummaryWriter
 from matplotlib import pyplot as plt
 plt.switch_backend('agg')
-from src.utils_main import get_time, gen_plot, hflip_batch, separate_bn_paras
+from src.utils import get_time, gen_plot, hflip_batch, separate_bn_paras
 from PIL import Image
 from torchvision import transforms as trans
 import math
@@ -230,8 +230,8 @@ class face_learner(object):
     def infer(self, conf, faces, target_embs, tta=False):
         '''
         faces : list of PIL Image
-        target_embs : [n, 512] computed embeddings of faces in facebank
-        names : recorded names of faces in facebank
+        target_embs : [n, 512] computed embeddings of faces in dataset
+        names : recorded names of faces in dataset
         tta : test time augmentation (hfilp, that's all)
         '''
         embs = []

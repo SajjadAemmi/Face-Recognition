@@ -30,11 +30,11 @@ def separate_bn_paras(modules):
     return paras_only_bn, paras_wo_bn
 
 
-def prepare_facebank(conf, model, mtcnn, tta = True):
+def prepare_dataset(conf, model, mtcnn, tta = True):
     model.eval()
     embeddings =  []
     names = ['Unknown']
-    for path in conf.facebank_path.iterdir():
+    for path in conf.dataset_path.iterdir():
         if path.is_file():
             continue
         else:
@@ -65,13 +65,13 @@ def prepare_facebank(conf, model, mtcnn, tta = True):
         names.append(path.name)
     embeddings = torch.cat(embeddings)
     names = np.array(names)
-    torch.save(embeddings, conf.facebank_path/'facebank.pth')
-    np.save(conf.facebank_path/'names', names)
+    torch.save(embeddings, conf.dataset_path/'dataset.pth')
+    np.save(conf.dataset_path/'names', names)
     return embeddings, names
 
-def load_facebank(conf):
-    embeddings = torch.load(os.path.join(conf.facebank_path, 'facebank.pth'))
-    names = np.load(os.path.join(conf.facebank_path, 'names.npy'))
+def load_dataset(conf):
+    embeddings = torch.load(os.path.join(conf.dataset_path, 'dataset.pth'))
+    names = np.load(os.path.join(conf.dataset_path, 'names.npy'))
     return embeddings, names
 
 def face_reader(conf, conn, flag, boxes_arr, result_arr, learner, mtcnn, targets, tta):

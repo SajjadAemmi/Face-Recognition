@@ -6,7 +6,7 @@ from src.mtcnn import MTCNN
 from config import get_config, config
 from src.mtcnn_pytorch.src.align_trans import get_reference_facial_points
 from src.Learner import face_learner
-from src.utils_main import load_facebank, prepare_facebank, draw_box_name
+from src.utils import load_dataset, prepare_dataset, draw_box_name
 from retina_face.retina_face import RetinaFaceModel
 
 
@@ -31,18 +31,20 @@ class FaceRecognizer:
         self.detector = dlib.get_frontal_face_detector()
         self.predictor = dlib.shape_predictor(self.conf.face_landmarks_path)
 
-    def _load_facebank(self):
+    def _load_dataset(self):
         if self.update:
-            targets, names = prepare_facebank(self.conf, self.learner.model, self.mtcnn, tta=self.tta)
-            print('facebank updated')
+            targets, names = prepare_dataset(self.conf, self.learner.model, self.mtcnn, tta=self.tta)
+            print('dataset updated')
         else:
-            targets, names = load_facebank(self.conf)
-            print('facebank loaded')
+            targets, names = load_dataset(self.conf)
+            print('dataset loaded')
         return targets, names
 
     def generate(self, input_video, output_video, save, type, name_trackers, show):
         refrence = get_reference_facial_points(default_square=True)
-        targets, names = self._load_facebank()
+
+        print(refrence)
+        targets, names = self._load_dataset()
 
         camera = dict()
         camera['proj_type'] = 'orthographic'
@@ -184,7 +186,7 @@ def get_args():
 
     parser.add_argument("-u",
                         "--update",
-                        help="whether perform update the facebank",
+                        help="whether perform update the dataset",
                         default=False,
                         action="store_true")
 

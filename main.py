@@ -138,8 +138,8 @@ class FaceRecognizer:
                     frame = draw_box_name(bbox, "unknown", frame)
             else:
                 results_retina, score_retina = self.learner.infer(self.conf, faces_retina, self.targets, self.tta)
-                # print("retina results: {}".format(results_retina))
-                # print("retina score: {}".format(score_retina))
+                print("retina results: {}".format(results_retina))
+                print("retina score: {}".format(score_retina))
 
                 for idx, bbox in enumerate(bboxes_retina):
                     name = self.names[results_retina[idx] + 1]

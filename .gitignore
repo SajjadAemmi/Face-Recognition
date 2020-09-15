@@ -134,3 +134,4 @@ __pycache__/
 *.pth
 *.dat
 *.ipynb
+*.tar

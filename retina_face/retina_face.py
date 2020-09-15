@@ -63,11 +63,7 @@ class RetinaFaceModel:
         self.net = model
         return model
 
-    def detect(self,
-               frame,
-               refrence,
-               target_size=1600,
-               max_size=2150):
+    def detect(self, frame, refrence, target_size=1600, max_size=2150):
         img = np.float32(frame)
         # testing scale
         im_shape = img.shape

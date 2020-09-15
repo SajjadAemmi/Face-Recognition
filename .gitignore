@@ -130,8 +130,7 @@ dmypy.json
 
 __pycache__/
 .idea/
-input/
-output/
+*.mp4
 *.pth
 *.dat
 *.ipynb

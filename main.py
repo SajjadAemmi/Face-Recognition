@@ -17,6 +17,7 @@ class FaceRecognizer:
         self.conf = get_config(False)
         self.learner_threshold = config['threshold']
         self.update = update
+        self.origin_size = origin_size
         self.tta = tta
         self.mtcnn = self._load_mtcnn()
         self.retina_face = RetinaFaceModel(config['network_type'],
@@ -74,6 +75,9 @@ class FaceRecognizer:
 
         if file_ext.lower() == '.jpg':
             image = cv2.imread(input)
+            if not self.origin_size:
+                image = cv2.resize(image, (0, 0), fx=0.5, fy=0.5)
+
             image = self.process_image(image, name_trackers)
             if show:
                 cv2.imshow('face Capture', image)
@@ -89,8 +93,10 @@ class FaceRecognizer:
             width = vidcap.get(cv2.CAP_PROP_FRAME_WIDTH)
             height = vidcap.get(cv2.CAP_PROP_FRAME_HEIGHT)
             fps = vidcap.get(cv2.CAP_PROP_FPS)
-            width = int(width // 2)
-            height = int(height // 2)
+
+            if not self.origin_size:
+                width = int(width // 2)
+                height = int(height // 2)
 
             if save:
                 video_writer = cv2.VideoWriter(output, cv2.VideoWriter_fourcc(*'mp4V'), fps, (width, height))
@@ -99,7 +105,6 @@ class FaceRecognizer:
             while vidcap.isOpened():
                 ret, frame = vidcap.read()
                 if ret:
-                    frame = cv2.resize(frame, (width, height))
                     frame_count += 1
                     print("processing frame {} ...".format(frame_count))
 
@@ -143,13 +148,13 @@ parser = argparse.ArgumentParser(description='Face Recognition - ArcFace with Re
 parser.add_argument('-i',
                     '--input',
                     help="input image or video path",
-                    default="input/demo3.mp4",
+                    default="input/IMG_4383.JPG",
                     type=str)
 
 parser.add_argument('-o',
                     '--output',
                     help="output image or video path",
-                    default="output/demo3.mp4",
+                    default="output/IMG_4383.JPG",
                     type=str)
 
 parser.add_argument('-ty',
@@ -159,7 +164,7 @@ parser.add_argument('-ty',
                     type=str)
 
 parser.add_argument('--origin_size',
-                    default=True,
+                    default=False,
                     type=str,
                     help='Whether to use origin image size to evaluate')
 

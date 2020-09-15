@@ -69,8 +69,7 @@ class FaceRecognizer:
                         print('Unknown!')
         return image
 
-    def __call__(self, input, output, save, type, name_trackers, show):
-
+    def __call__(self, input, output, save, type, name_trackers, show, fps):
         file_name, file_ext = os.path.splitext(input)
 
         if file_ext.lower() == '.jpg':
@@ -84,28 +83,28 @@ class FaceRecognizer:
             if save:
                 cv2.imwrite(output, image)
 
-        elif file_ext.lower() == '.mp4':
+        elif file_ext.lower() == '.mp4' or input.isdigit():
 
-            camera = dict()
-            camera['proj_type'] = 'orthographic'
-
-            vidcap = cv2.VideoCapture(input)
-            width = vidcap.get(cv2.CAP_PROP_FRAME_WIDTH)
-            height = vidcap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-            fps = vidcap.get(cv2.CAP_PROP_FPS)
+            cap = cv2.VideoCapture(int(input)) if input.isdigit() else cv2.VideoCapture(input)
+            width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+            height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+            cap_fps = cap.get(cv2.CAP_PROP_FPS)
 
             if not self.origin_size:
                 width = int(width // 2)
                 height = int(height // 2)
 
             if save:
-                video_writer = cv2.VideoWriter(output, cv2.VideoWriter_fourcc(*'mp4V'), fps, (width, height))
+                video_writer = cv2.VideoWriter(output, cv2.VideoWriter_fourcc(*'mp4V'), cap_fps, (width, height))
 
             frame_count = 0
-            while vidcap.isOpened():
-                ret, frame = vidcap.read()
+            while cap.isOpened():
+                ret, frame = cap.read()
                 if ret:
                     frame_count += 1
+                    if fps and frame_count % (cap_fps // fps) != 0:
+                        continue
+
                     print("processing frame {} ...".format(frame_count))
 
                     frame = self.process_image(frame, name_trackers)
@@ -118,7 +117,7 @@ class FaceRecognizer:
                         break
                 else:
                     break
-            vidcap.release()
+            cap.release()
             if save:
                 video_writer.release()
             cv2.destroyAllWindows()
@@ -148,13 +147,13 @@ parser = argparse.ArgumentParser(description='Face Recognition - ArcFace with Re
 parser.add_argument('-i',
                     '--input',
                     help="input image or video path",
-                    default="input/IMG_4383.JPG",
+                    default="input/amir_mahdi.mp4",
                     type=str)
 
 parser.add_argument('-o',
                     '--output',
                     help="output image or video path",
-                    default="output/IMG_4383.JPG",
+                    default="output/webcam.mp4",
                     type=str)
 
 parser.add_argument('-ty',
@@ -167,6 +166,11 @@ parser.add_argument('--origin_size',
                     default=False,
                     type=str,
                     help='Whether to use origin image size to evaluate')
+
+parser.add_argument('--fps',
+                    default=None,
+                    type=int,
+                    help='frame per second')
 
 parser.add_argument('--cpu',
                     action="store_true",
@@ -227,4 +231,5 @@ if __name__ == '__main__':
                                      update=args.update, tta=args.tta)
 
     face_recognizer(input=args.input, output=args.output, save=args.save,
-                    type=args.type, name_trackers=args.name_trackers, show=args.show)
+                    type=args.type, name_trackers=args.name_trackers, show=args.show,
+                    fps=args.fps)

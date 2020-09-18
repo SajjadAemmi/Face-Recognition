@@ -9,7 +9,6 @@ model_final_url = "https://drive.google.com/uc?id=1Ds6B8KVU68VdJU1tICoB5VCZ7OHU7
 resnet50_final_url = "https://drive.google.com/uc?id=10xlOuLk4BPw92TEJYaqmA6gidlt8TXf1"
 shape_predictor_68_face_landmarks_url = "https://drive.google.com/uc?id=1z0nq0Ubf-AMrn3XMJE37IHkQaM9jk9nt"
 
-
 if __name__ == '__main__':
 
     path = './src/weights'

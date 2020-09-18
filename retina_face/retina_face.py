@@ -11,24 +11,18 @@ from retina_face.layers.functions.prior_box import PriorBox
 from retina_face.utils.box_utils import decode, decode_landm
 from retina_face.utils.nms.py_cpu_nms import py_cpu_nms
 from src.mtcnn_pytorch.src.align_trans import warp_and_crop_face
+from config import config
 
 
 class RetinaFaceModel:
-    def __init__(self,
-                 network_type,
-                 trained_model_path,
-                 cpu,
-                 origin_size,
-                 confidence_threshold,
-                 nms_threshold,
-                 vis_threshold):
-        self.network_type = network_type
-        self.trained_model_path = trained_model_path
-        self.load_to_cpu = cpu
+    def __init__(self, gpu, origin_size):
+        self.network_type = config.network_type
+        self.trained_model_path = config.trained_model_path
+        self.gpu = gpu
         self.origin_size = origin_size
-        self.confidence_threshold = confidence_threshold
-        self.nms_threshold = nms_threshold
-        self.vis_threshold = vis_threshold
+        self.confidence_threshold = config.confidence_threshold
+        self.nms_threshold = config.nms_threshold
+        self.vis_threshold = config.vis_threshold
         self.cfg = None
         self.device = None
         self.net = None
@@ -41,11 +35,11 @@ class RetinaFaceModel:
             self.cfg = cfg_re50
         model = RetinaFace(cfg=self.cfg, phase='test')
         print('Loading pretrained model from {}'.format(self.trained_model_path))
-        if self.load_to_cpu:
-            pretrained_dict = torch.load(self.trained_model_path, map_location=torch.device('cpu'))
-        else:
+        if self.gpu:
             device = torch.cuda.current_device()
             pretrained_dict = torch.load(self.trained_model_path, map_location=lambda storage, loc: storage.cuda(device))
+        else:
+            pretrained_dict = torch.load(self.trained_model_path, map_location=torch.device('cpu'))
 
         if "state_dict" in pretrained_dict.keys():
             pretrained_dict = self._remove_prefix(pretrained_dict['state_dict'], 'module.')
@@ -57,9 +51,13 @@ class RetinaFaceModel:
         print('RetinaNet model loaded.')
         # print(model)
         cudnn.benchmark = True
-        device = torch.device("cpu" if self.load_to_cpu else "cuda")
-        model = model.to(device)
-        self.device = device
+
+        if self.gpu and torch.cuda.is_available():
+            self.device = torch.device("cuda:0")
+        else:
+            self.device = torch.device("cpu")
+
+        model = model.to(self.device)
         self.net = model
         return model
 

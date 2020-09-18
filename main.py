@@ -2,150 +2,86 @@ import cv2
 import dlib
 import argparse
 import os
+import torch
 
 from src.mtcnn import MTCNN
-from config import get_config, config
+from config import config
 from src.mtcnn_pytorch.src.align_trans import get_reference_facial_points
-from src.Learner import face_learner
+from src.face_learner import FaceLearner
 from src.utils import load_dataset, prepare_dataset, draw_box_name
 from retina_face.retina_face import RetinaFaceModel
 
 
 parser = argparse.ArgumentParser(description='Face Recognition - ArcFace with RetinaFace')
 
-parser.add_argument('-i',
-                    '--input',
-                    help="input image or video path",
-                    default="input/amir_mahdi.mp4",
-                    type=str)
-
-parser.add_argument('-o',
-                    '--output',
-                    help="output image or video path",
-                    default="output/webcam.mp4",
-                    type=str)
-
-parser.add_argument('-ty',
-                    '--type',
-                    help="all | name",
-                    default="name",
-                    type=str)
-
-parser.add_argument('--origin_size',
-                    default=False,
-                    type=str,
-                    help='Whether to use origin image size to evaluate')
-
-parser.add_argument('--fps',
-                    default=None,
-                    type=int,
-                    help='frame per second')
-
-parser.add_argument('--cpu',
-                    action="store_true",
-                    default=True,
-                    help='Use cpu inference')
-
-parser.add_argument('--model',
-                    default='mobilenet',
-                    help='mobilenet | resnet50')
-
-parser.add_argument('--dataset_folder',
-                    default='src/data/widerface/val/images/',
-                    type=str,
-                    help='dataset path')
-
-parser.add_argument("-s",
-                    "--save",
-                    help="whether to save",
-                    default=True,
-                    action="store_true")
-
-parser.add_argument("-u",
-                    "--update",
-                    help="whether perform update the dataset",
-                    default=False,
-                    action="store_true")
-
-parser.add_argument("-tta",
-                    "--tta",
-                    help="whether test time augmentation",
-                    default=False,
-                    action="store_true")
-
-parser.add_argument("-c",
-                    "--score",
-                    help="whether show the confidence score",
-                    default=True,
-                    action="store_true")
-
-parser.add_argument("-names",
-                    "--name_trackers",
-                    help="The person who want track",
-                    type=str,
+parser.add_argument('-i', '--input', help="input image or video path", default="input/sajjad.mp4", type=str)
+parser.add_argument('-o', '--output', help="output image or video path", default="output/webcam.mp4", type=str)
+parser.add_argument('-ty', '--type', help="all | name", default="name", type=str)
+parser.add_argument('--origin_size', default=False, type=str, help='Whether to use origin image size to evaluate')
+parser.add_argument('--fps', default=None, type=int, help='frame per second')
+parser.add_argument('--gpu', action="store_true", default=False, help='Use gpu inference')
+parser.add_argument('--model', default='mobilenet', help='mobilenet | resnet50')
+parser.add_argument("-s", "--save", help="whether to save", default=True, action="store_true")
+parser.add_argument("-u", "--update", help="whether perform update the dataset", default=False, action="store_true")
+parser.add_argument("-tta", "--tta", help="whether test time augmentation", default=True, action="store_true")
+parser.add_argument("-c", "--score", help="whether show the confidence score", default=True, action="store_true")
+parser.add_argument("-sh", "--show", help="show results online", default=True, action="store_true")
+parser.add_argument("-names", "--name_trackers", help="The person who want track", type=str,
                     default="['Amir', 'Sajjad', 'Mahdi', 'Ali']")
-
-parser.add_argument("-sh",
-                    "--show",
-                    help="whether perform show image results online",
-                    default=True,
-                    action="store_true")
 
 args = parser.parse_args()
 
 
 class FaceRecognizer:
-    def __init__(self, load_to_cpu, origin_size, update, tta):
+    def __init__(self, gpu, origin_size, update, tta):
 
-        self.conf = get_config(False)
-        self.learner_threshold = config['threshold']
+        self.learner_threshold = config.threshold
         self.update = update
         self.origin_size = origin_size
+
+        if gpu and torch.cuda.is_available():
+            self.device = torch.device("cuda:0")
+        else:
+            self.device = torch.device("cpu")
+
         self.tta = tta
         self.mtcnn = MTCNN()
-        self.retina_face = RetinaFaceModel(config['network_type'],
-                                           config['trained_model_path'],
-                                           load_to_cpu,
-                                           origin_size,
-                                           config['confidence_threshold'],
-                                           config['nms_threshold'],
-                                           config['vis_threshold'])
+        self.retina_face = RetinaFaceModel(gpu, origin_size)
         self.net = self.retina_face.load_model()
         self.learner = self._load_learner()
 
         self.detector = dlib.get_frontal_face_detector()
-        self.predictor = dlib.shape_predictor(self.conf.face_landmarks_path)
-
+        self.predictor = dlib.shape_predictor(config.face_landmarks_path)
         self.targets, self.names = self._load_dataset()
         self.reference = get_reference_facial_points(default_square=True)
 
     def _load_dataset(self):
         if self.update:
-            targets, names = prepare_dataset(self.conf, self.learner.model, self.mtcnn, tta=self.tta)
+            targets, names = prepare_dataset(self.learner.model, self.mtcnn, tta=self.tta)
             print('dataset updated')
         else:
-            targets, names = load_dataset(self.conf)
+            targets, names = load_dataset()
             print('dataset loaded')
         return targets, names
 
     def process_image(self, image, name_trackers):
-        bboxes_retina, faces_retina = self.retina_face.detect(image, self.reference)
-        print('number of detected faces: ', len(faces_retina))
+        bounding_boxes, faces = self.retina_face.detect(image, self.reference)
+        print('number of detected faces: ', len(faces))
 
-        if bboxes_retina.size != 0:
+        if len(faces) != 0:
             if type == "all":
-                for bbox in bboxes_retina:
-                    frame = draw_box_name(bbox, "unknown", frame)
+                for bounding_box in bounding_boxes:
+                    frame = draw_box_name(bounding_box, "unknown", frame)
             else:
-                results_retina, score_retina = self.learner.infer(self.conf, faces_retina, self.targets, self.tta)
-                print("retina results: {}".format(results_retina))
-                print("retina score: {}".format(score_retina))
+                results, results_score = self.learner.infer(faces, self.targets, self.tta)
+                # print("retina results: {}".format(results))
+                # print("retina score: {}".format(results_score))
 
-                for idx, bbox in enumerate(bboxes_retina):
-                    name = self.names[results_retina[idx] + 1]
+                for idx, bounding_box in enumerate(bounding_boxes):
+                    name = self.names[results[idx] + 1]
                     if name != "Unknown":
                         if name in name_trackers:
-                            image = draw_box_name(bbox, self.names[results_retina[idx] + 1], image)
+                            image = draw_box_name(bounding_box, self.names[results[idx] + 1], image)
                         else:
                             print('not in tracker!')
                     else:
@@ -167,7 +103,6 @@ class FaceRecognizer:
                 cv2.imwrite(output, image)
 
         elif file_ext.lower() == '.mp4' or input.isdigit():
-
             cap = cv2.VideoCapture(int(input)) if input.isdigit() else cv2.VideoCapture(input)
             width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
             height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
@@ -189,7 +124,6 @@ class FaceRecognizer:
                         continue
 
                     print("processing frame {} ...".format(frame_count))
-
                     frame = self.process_image(frame, name_trackers)
 
                     if show:
@@ -204,26 +138,23 @@ class FaceRecognizer:
             if save:
                 video_writer.release()
             cv2.destroyAllWindows()
-
         print('finish!')
 
     def _load_learner(self):
-        learner = face_learner(self.conf, True)
+        learner = FaceLearner(self.device, inference=True)
         learner.threshold = self.learner_threshold
-        if self.conf.device.type == 'cpu':
-            learner.load_state(self.conf, 'cpu_final.pth', False, True)
+        if self.device.type == 'cpu':
+            learner.load_state(config, 'cpu_final.pth', False, True)
             print('learner cpu loaded')
         else:
-            learner.load_state(self.conf, 'final.pth', False, True)
+            learner.load_state(config, 'final.pth', False, True)
             print('learner gpu loaded')
         learner.model.eval()
         return learner
 
 
 if __name__ == '__main__':
-
-    face_recognizer = FaceRecognizer(load_to_cpu=args.cpu, origin_size=args.origin_size,
-                                     update=args.update, tta=args.tta)
+    face_recognizer = FaceRecognizer(gpu=args.gpu, origin_size=args.origin_size, update=args.update, tta=args.tta)
 
     face_recognizer(input=args.input, output=args.output, save=args.save, type=args.type,
                     name_trackers=args.name_trackers, show=args.show, fps=args.fps)

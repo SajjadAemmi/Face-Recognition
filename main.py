@@ -4,9 +4,7 @@ import argparse
 import os
 import torch
 
-from src.mtcnn import MTCNN
 from config import config
-from src.mtcnn_pytorch.src.align_trans import get_reference_facial_points
 from src.face_learner import FaceLearner
 from src.utils import load_dataset, prepare_dataset, draw_box_name
 from retina_face.retina_face import RetinaFaceModel
@@ -45,7 +43,6 @@ class FaceRecognizer:
             self.device = torch.device("cpu")
 
         self.tta = tta
-        self.mtcnn = MTCNN()
         self.retina_face = RetinaFaceModel(gpu, origin_size)
         self.net = self.retina_face.load_model()
         self.learner = self._load_learner()
@@ -53,11 +50,10 @@ class FaceRecognizer:
         self.detector = dlib.get_frontal_face_detector()
         self.predictor = dlib.shape_predictor(config.face_landmarks_path)
         self.targets, self.names = self._load_dataset()
-        self.reference = get_reference_facial_points(default_square=True)
 
     def _load_dataset(self):
         if self.update:
-            targets, names = prepare_dataset(self.learner.model, self.mtcnn, tta=self.tta)
+            targets, names = prepare_dataset(self.learner.model, tta=self.tta)
             print('dataset updated')
         else:
             targets, names = load_dataset()
@@ -65,13 +61,13 @@ class FaceRecognizer:
         return targets, names
 
     def process_image(self, image, name_trackers):
-        bounding_boxes, faces = self.retina_face.detect(image, self.reference)
+        bounding_boxes, faces = self.retina_face.detect(image)
         print('number of detected faces: ', len(faces))
 
         if len(faces) != 0:
             if type == "all":
                 for bounding_box in bounding_boxes:
-                    frame = draw_box_name(bounding_box, "unknown", frame)
+                    frame = draw_box_name(bounding_box, "unknown", image)
             else:
                 results, results_score = self.learner.infer(faces, self.targets, self.tta)
                 # print("retina results: {}".format(results))

@@ -10,6 +10,7 @@ from retina_face.layers.functions.prior_box import PriorBox
 from retina_face.utils.box_utils import decode, decode_landm
 from retina_face.utils.nms.py_cpu_nms import py_cpu_nms
 from src.mtcnn_pytorch.src.align_trans import warp_and_crop_face
+from src.mtcnn_pytorch.src.align_trans import get_reference_facial_points
 from config import config
 
 
@@ -58,7 +59,8 @@ class RetinaFaceModel:
         self.net = model
         return model
 
-    def detect(self, frame, reference):
+    def detect(self, frame):
+        reference = get_reference_facial_points(default_square=True)
         img = np.float32(frame)
         resize = 1
         im_height, im_width, _ = img.shape

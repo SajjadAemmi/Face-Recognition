@@ -8,6 +8,7 @@ import torch
 from src.model import l2_norm
 import cv2
 import os
+from src.mtcnn import MTCNN
 from config import config
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
@@ -31,7 +32,8 @@ def separate_bn_paras(modules):
     return paras_only_bn, paras_wo_bn
 
 
-def prepare_dataset(model, mtcnn, tta=True):
+def prepare_dataset(model, tta=True):
+    mtcnn = MTCNN()
     model.eval()
     embeddings = []
     names = ['Unknown']

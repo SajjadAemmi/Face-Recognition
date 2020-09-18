@@ -11,10 +11,10 @@ from retina_face.retina_face import RetinaFaceModel
 
 parser = argparse.ArgumentParser(description='Face Recognition - ArcFace with RetinaFace')
 
-parser.add_argument('-i', '--input', help="input image or video path", default="input/IMG_4383.JPG", type=str)
-parser.add_argument('-o', '--output', help="output image or video path", default="output/IMG_4383.JPG", type=str)
+parser.add_argument('-i', '--input', help="input image or video path", default="input/sajjad.mp4", type=str)
+parser.add_argument('-o', '--output', help="output image or video path", default="output/s.mp4", type=str)
 parser.add_argument('--type', help="all | name", default="name", type=str)
-parser.add_argument('--origin_size', default=False, type=str, help='Whether to use origin image size to evaluate')
+parser.add_argument('--origin_size', default=True, type=str, help='Whether to use origin image size to evaluate')
 parser.add_argument('--fps', default=None, type=int, help='frame per second')
 parser.add_argument('--gpu', action="store_true", default=False, help='Use gpu inference')
 parser.add_argument('--model', default='mobilenet', help='mobilenet | resnet50')
@@ -81,6 +81,7 @@ class FaceRecognizer:
             image = self.process_image(image, name_trackers, show_score)
             if show:
                 cv2.imshow('face Capture', image)
+                cv2.waitKey()
             if save:
                 cv2.imwrite(output, image)
 
@@ -91,11 +92,12 @@ class FaceRecognizer:
             cap_fps = cap.get(cv2.CAP_PROP_FPS)
 
             if not self.origin_size:
-                width = int(width // 2)
-                height = int(height // 2)
+                width = width // 2
+                height = height // 2
 
             if save:
-                video_writer = cv2.VideoWriter(output, cv2.VideoWriter_fourcc(*'mp4V'), cap_fps, (width, height))
+                video_writer_fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+                video_writer = cv2.VideoWriter(output, video_writer_fourcc, cap_fps, (int(width), int(height)))
 
             frame_count = 0
             while cap.isOpened():
@@ -112,6 +114,7 @@ class FaceRecognizer:
                         cv2.imshow('face Capture', frame)
                     if save:
                         video_writer.write(frame)
+
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
                 else:

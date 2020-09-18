@@ -24,6 +24,7 @@ class RetinaFaceModel:
         self.cfg = None
         self.device = None
         self.net = None
+        self.load_model()
 
     def load_model(self):
         torch.set_grad_enabled(False)
@@ -57,10 +58,10 @@ class RetinaFaceModel:
 
         model = model.to(self.device)
         self.net = model
-        return model
 
     def detect(self, frame):
         reference = get_reference_facial_points(default_square=True)
+
         img = np.float32(frame)
         resize = 1
         im_height, im_width, _ = img.shape
@@ -71,7 +72,6 @@ class RetinaFaceModel:
         img = torch.from_numpy(img).unsqueeze(0)
         img = img.to(self.device)
         scale = scale.to(self.device)
-
         loc, conf, landms = self.net(img)  # forward pass
 
         priorbox = PriorBox(self.cfg, image_size=(im_height, im_width))

@@ -49,7 +49,7 @@ config.ce_loss = CrossEntropyLoss()
 
 # Inference Config
 config.dataset_path = Path('./dataset')
-config.threshold = 1.5
+config.learner_threshold = 1.5
 config.face_limit = 10
 #when inference, at maximum detect 10 faces in one image, my laptop is slow
 config.min_face_size = 20

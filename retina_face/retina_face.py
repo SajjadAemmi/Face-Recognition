@@ -6,7 +6,6 @@ import numpy as np
 
 from retina_face.data.config import cfg_mnet, cfg_re50
 from retina_face.models.retinaface import RetinaFace
-from retina_face.utils.timer import Timer
 from retina_face.layers.functions.prior_box import PriorBox
 from retina_face.utils.box_utils import decode, decode_landm
 from retina_face.utils.nms.py_cpu_nms import py_cpu_nms
@@ -16,22 +15,20 @@ from config import config
 
 class RetinaFaceModel:
     def __init__(self, gpu, origin_size):
-        self.network_type = config.network_type
         self.trained_model_path = config.trained_model_path
         self.gpu = gpu
         self.origin_size = origin_size
         self.confidence_threshold = config.confidence_threshold
         self.nms_threshold = config.nms_threshold
-        self.vis_threshold = config.vis_threshold
         self.cfg = None
         self.device = None
         self.net = None
 
     def load_model(self):
         torch.set_grad_enabled(False)
-        if self.network_type == "mobile0.25":
+        if config.network_type == "mobile0.25":
             self.cfg = cfg_mnet
-        elif self.network_type == "resnet50":
+        elif config.network_type == "resnet50":
             self.cfg = cfg_re50
         model = RetinaFace(cfg=self.cfg, phase='test')
         print('Loading pretrained model from {}'.format(self.trained_model_path))
@@ -61,24 +58,10 @@ class RetinaFaceModel:
         self.net = model
         return model
 
-    def detect(self, frame, refrence, target_size=1600, max_size=2150):
+    def detect(self, frame, reference):
         img = np.float32(frame)
-        # testing scale
-        im_shape = img.shape
-        im_size_min = np.min(im_shape[0:2])
-        im_size_max = np.max(im_shape[0:2])
-        resize = float(target_size) / float(im_size_min)
-        # prevent bigger axis from being more than max_size:
-        if np.round(resize * im_size_max) > max_size:
-            resize = float(max_size) / float(im_size_max)
-        if self.origin_size:
-            resize = 1
-
-        if resize != 1:
-            img = cv2.resize(img, None, None, fx=resize, fy=resize, interpolation=cv2.INTER_LINEAR)
-
+        resize = 1
         im_height, im_width, _ = img.shape
-        # print("Image shape is {}".format(img.shape))
 
         scale = torch.Tensor([img.shape[1], img.shape[0], img.shape[1], img.shape[0]])
         img -= (104, 117, 123)
@@ -87,11 +70,8 @@ class RetinaFaceModel:
         img = img.to(self.device)
         scale = scale.to(self.device)
 
-        _t = {'forward_pass': Timer(), 'misc': Timer()}
-        _t['forward_pass'].tic()
         loc, conf, landms = self.net(img)  # forward pass
-        _t['forward_pass'].toc()
-        _t['misc'].tic()
+
         priorbox = PriorBox(self.cfg, image_size=(im_height, im_width))
         priors = priorbox.forward()
         priors = priors.to(self.device)
@@ -124,7 +104,6 @@ class RetinaFaceModel:
         # do NMS
         dets = np.hstack((boxes, scores[:, np.newaxis])).astype(np.float32, copy=False)
         keep = py_cpu_nms(dets, self.nms_threshold)
-        # keep = nms(dets, args_retina.nms_threshold,force_cpu=args_retina.cpu)
         dets = dets[keep, :]
         landms = landms[keep]
 
@@ -133,34 +112,20 @@ class RetinaFaceModel:
         # landms = landms[:args_retina.keep_top_k, :]
 
         # dets = np.concatenate((dets, landms), axis=1)
-        _t['misc'].toc()
-
-        print('forward_pass_time: {:.4f}s misc: {:.4f}s'.format(_t['forward_pass'].average_time,
-                                                                _t['misc'].average_time))
 
         faces = []
         trusted_idx = []
 
-        # for landmark in landms:
-        #     facial5points = [[landmark[2*j], landmark[2*j + 1]] for j in range(5)]
-        #     print(facial5points)
-        #     warped_face = warp_and_crop_face(np.array(frame), facial5points, refrence, crop_size=(112, 112))
-        #     cv2.imshow("Warped Face",warped_face)
-        #
-        #     faces.append(Image.fromarray(warped_face))
-
-        # print(len(landms))
-
         for idx in range(len(landms)):
             b = dets[idx, :]
-            # print(b[4])
+            # print(b)
 
-            if b[4] > self.vis_threshold:
+            if b[4] > config.vis_threshold:
                 landmark = landms[idx]
                 facial5points = [[landmark[2 * j], landmark[2 * j + 1]] for j in range(5)]
                 # print(facial5points)
-                warped_face = warp_and_crop_face(np.array(frame), facial5points, refrence, crop_size=(112, 112))
-                # cv2.imshow("Warped Face 2",warped_face)
+                warped_face = warp_and_crop_face(np.array(frame), facial5points, reference, crop_size=(112, 112))
+                # cv2.imshow("Warped Face", warped_face)
 
                 faces.append(Image.fromarray(warped_face))
                 trusted_idx.append(idx)

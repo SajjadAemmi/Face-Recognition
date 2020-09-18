@@ -10,7 +10,7 @@ from retina_face.models.net import SSH as SSH
 
 class ClassHead(nn.Module):
     def __init__(self,inchannels=512,num_anchors=3):
-        super(ClassHead,self).__init__()
+        super(ClassHead, self).__init__()
         self.num_anchors = num_anchors
         self.conv1x1 = nn.Conv2d(inchannels,self.num_anchors*2,kernel_size=(1,1),stride=1,padding=0)
 
@@ -57,7 +57,7 @@ class RetinaFace(nn.Module):
         if cfg['name'] == 'mobilenet0.25':
             backbone = MobileNetV1()
             if cfg['pretrain']:
-                checkpoint = torch.load("./src/weights/mobilenetV1X0.25_pretrain.tar", map_location=torch.device('cpu'))
+                checkpoint = torch.load("./weights/mobilenetV1X0.25_pretrain.tar", map_location=torch.device('cpu'))
                 from collections import OrderedDict
                 new_state_dict = OrderedDict()
                 for k, v in checkpoint['state_dict'].items():

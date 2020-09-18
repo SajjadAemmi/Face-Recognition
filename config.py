@@ -7,7 +7,7 @@ from torchvision import transforms as trans
 
 config = edict()
 
-config.trained_model_path = join('src', 'weights', 'mobilenet0.25_Final.pth')
+config.trained_model_path = join('weights', 'mobilenet0.25_Final.pth')
 config.network_type = 'mobile0.25'
 config.confidence_threshold = 0.02
 config.top_k = 5000
@@ -17,10 +17,10 @@ config.vis_threshold = 0.5
 config.threshold = 1.15
 
 config.data_path = Path(join('retina_face', 'data'))
-config.model_path = './src/weights'
+config.model_path = './weights'
 config.input_size = [112, 112]
 config.input_size = [256, 256]
-config.face_landmarks_path = "./src/weights/shape_predictor_68_face_landmarks.dat"
+config.face_landmarks_path = "./weights/shape_predictor_68_face_landmarks.dat"
 
 config.embedding_size = 512
 config.use_mobilfacenet = False

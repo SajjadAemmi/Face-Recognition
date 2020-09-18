@@ -8,9 +8,6 @@ from src.mtcnn_pytorch.src.first_stage import run_first_stage
 from src.mtcnn_pytorch.src.align_trans import get_reference_facial_points, warp_and_crop_face
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-import cv2
-
-# device = 'cpu'
 
 class MTCNN():
     def __init__(self):
@@ -21,13 +18,13 @@ class MTCNN():
         self.rnet.eval()
         self.onet.eval()
         self.refrence = get_reference_facial_points(default_square= True)
-        
+
+
     def align(self, img):
         _, landmarks = self.detect_faces(img)
         facial5points = [[landmarks[0][j],landmarks[0][j+5]] for j in range(5)]
         warped_face = warp_and_crop_face(np.array(img), facial5points, self.refrence, crop_size=(112,112))
         return Image.fromarray(warped_face)
-
 
 
     def align_multi(self, img, limit=None, min_face_size=30.0):
@@ -47,7 +44,6 @@ class MTCNN():
 
             faces.append(Image.fromarray(warped_face))
         return boxes, faces
-
 
 
     def detect_faces(self, image, min_face_size=20.0,

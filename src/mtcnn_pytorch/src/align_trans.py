@@ -204,11 +204,8 @@ def get_affine_transform_matrix(src_pts, dst_pts):
     return tfm
 
 
-def warp_and_crop_face(src_img,
-                       facial_pts,
-                       reference_pts=None,
-                       crop_size=(96, 112),
-                       align_type='smilarity'):
+def warp_and_crop_face(src_img, facial_pts, reference_pts=None, crop_size=(96, 112), align_type='smilarity'):
+
     """
     Function:
     ----------

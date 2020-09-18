@@ -228,7 +228,7 @@ class FaceLearner(object):
         faces : list of PIL Image
         target_embs : [n, 512] computed embeddings of faces in dataset
         names : recorded names of faces in dataset
-        tta : test time augmentation (hfilp, that's all)
+        tta : test time augmentation (hflip, that's all)
         '''
         embs = []
         for face in faces:
@@ -240,9 +240,9 @@ class FaceLearner(object):
                 embs.append(l2_norm(emb + emb_mirror))
             else:
                 embs.append(self.model(config.test_transform(face).to(self.device).unsqueeze(0)))
-        print('embs', embs)
+        # print('embs', embs)
         source_embs = torch.cat(embs)
-        print('source_embs', source_embs)
+        # print('source_embs', source_embs)
 
         diff = source_embs.unsqueeze(-1) - target_embs.transpose(1, 0).unsqueeze(0)
         dist = torch.sum(torch.pow(diff, 2), dim=1)

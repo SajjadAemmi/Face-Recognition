@@ -7,7 +7,6 @@ dlib==19.21.0
 gdown==3.12.2
 matplotlib==3.2.0
 numpy==1.17.4
-mxnet==1.6.0
 scipy==1.4.1
 tqdm==4.48.0
 Pillow==7.2.0

@@ -11,8 +11,8 @@ from retina_face.retina_face import RetinaFaceModel
 
 parser = argparse.ArgumentParser(description='Face Recognition - ArcFace with RetinaFace')
 
-parser.add_argument('-i', '--input', help="input image or video path", default="input/amir_mahdi.mp4", type=str)
-parser.add_argument('-o', '--output', help="output image or video path", default="output/webcam.mp4", type=str)
+parser.add_argument('-i', '--input', help="input image or video path", default="input/IMG_4383.JPG", type=str)
+parser.add_argument('-o', '--output', help="output image or video path", default="output/IMG_4383.JPG", type=str)
 parser.add_argument('--type', help="all | name", default="name", type=str)
 parser.add_argument('--origin_size', default=False, type=str, help='Whether to use origin image size to evaluate')
 parser.add_argument('--fps', default=None, type=int, help='frame per second')

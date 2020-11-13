@@ -25,4 +25,4 @@ python main.py -i "./input/sample.mp4" -u
 ```
 Use -sh for representation of results during code running or not
 
-Note that you can pass some other arguments. Take a look at *main.py*, *parse_args* fanction.
+Note that you can pass some other arguments. Take a look at *main.py* file.

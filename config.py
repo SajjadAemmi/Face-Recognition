@@ -15,6 +15,7 @@ config.nms_threshold = 0.4
 config.keep_top_k = 750
 config.vis_threshold = 0.5
 config.threshold = 1.15
+config.device = 'cpu'
 
 config.data_path = Path(join('retina_face', 'data'))
 config.model_path = './weights'

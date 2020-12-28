@@ -11,8 +11,8 @@ from retina_face.retina_face import RetinaFaceModel
 
 parser = argparse.ArgumentParser(description='Face Recognition - ArcFace with RetinaFace')
 
-parser.add_argument('-i', '--input', help="input image or video path", default="input/amir_mahdi_sajjad.mp4", type=str)
-parser.add_argument('-o', '--output', help="output image or video path", default="output/s.mp4", type=str)
+parser.add_argument('-i', '--input', help="input image or video path", default="input/IMG_0436.JPG", type=str)
+parser.add_argument('-o', '--output', help="output image or video path", default="output/IMG_0436.JPG", type=str)
 parser.add_argument('--origin_size', default=True, type=str, help='Whether to use origin image size to evaluate')
 parser.add_argument('--fps', default=None, type=int, help='frame per second')
 parser.add_argument('--gpu', action="store_true", default=False, help='Use gpu inference')
@@ -51,14 +51,14 @@ class FaceRecognizer:
                 for bounding_box in bounding_boxes:
                     image = draw_box_name(bounding_box, "unknown", image)
             else:
-                results, results_score = self.learner.infer(faces, self.targets, self.tta)
+                results, results_score = self.learner(faces, self.targets, self.tta)
                 # print("retina results: {}".format(results))
                 # print("retina score: {}".format(results_score))
 
                 for idx, bounding_box in enumerate(bounding_boxes):
-                    name = self.names[results[idx] + 1]
-                    score = round(results_score[idx].item(), 2)
-                    if name != "Unknown":
+                    if results[idx] != -1:
+                        name = self.names[results[idx] + 1]
+                        score = round(results_score[idx].item(), 2)
                         image = draw_box_name(bounding_box, name, score, show_score, image)
                     else:
                         print('Unknown!')
@@ -130,7 +130,6 @@ class FaceRecognizer:
 
     def _load_learner(self):
         learner = FaceLearner(self.device, inference=True)
-        learner.threshold = config.learner_threshold
         if self.device.type == 'cpu':
             learner.load_state(config, 'cpu_final.pth', False, True)
             print('learner cpu loaded')

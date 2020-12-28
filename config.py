@@ -14,7 +14,7 @@ config.top_k = 5000
 config.nms_threshold = 0.4
 config.keep_top_k = 750
 config.vis_threshold = 0.5
-config.threshold = 1.15
+config.recognition_threshold = 0.8
 config.device = 'cpu'
 
 config.data_path = Path(join('retina_face', 'data'))
@@ -50,7 +50,6 @@ config.ce_loss = CrossEntropyLoss()
 
 # Inference Config
 config.dataset_path = Path('./dataset')
-config.learner_threshold = 1.5
 config.face_limit = 10
 #when inference, at maximum detect 10 faces in one image, my laptop is slow
 config.min_face_size = 20

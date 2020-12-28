@@ -57,7 +57,7 @@ class FaceLearner(object):
             self.save_every = len(self.loader)//5
             self.agedb_30, self.cfp_fp, self.lfw, self.agedb_30_issame, self.cfp_fp_issame, self.lfw_issame = get_val_data(self.loader.dataset.root.parent)
         else:
-            self.threshold = config.threshold
+            self.threshold = config.recognition_threshold
     
     def save_state(self, conf, accuracy, to_save_folder=False, extra=None, model_only=False):
         if to_save_folder:
@@ -223,7 +223,7 @@ class FaceLearner(object):
             params['lr'] /= 10
         print(self.optimizer)
 
-    def infer(self, faces, target_embs, tta=False):
+    def __call__(self, faces, target_embs, tta=False):
         '''
         faces : list of PIL Image
         target_embs : [n, 512] computed embeddings of faces in dataset
@@ -240,14 +240,9 @@ class FaceLearner(object):
                 embs.append(l2_norm(emb + emb_mirror))
             else:
                 embs.append(self.model(config.test_transform(face).to(self.device).unsqueeze(0)))
-        # print('embs', embs)
-        source_embs = torch.cat(embs)
-        # print('source_embs', source_embs)
-        print(target_embs.transpose(1, 0).unsqueeze(0).numpy().shape)
-        print(source_embs.unsqueeze(-1).numpy().shape)
 
+        source_embs = torch.cat(embs)
         diff = source_embs.unsqueeze(-1) - target_embs.transpose(1, 0).unsqueeze(0)
-        print(diff.numpy().shape)
 
         dist = torch.sum(torch.pow(diff, 2), dim=1)
         minimum, min_idx = torch.min(dist, dim=1)

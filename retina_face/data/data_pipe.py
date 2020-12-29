@@ -6,11 +6,12 @@ import cv2
 import bcolz
 from config import config
 from PIL import Image, ImageFile
+
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
 def de_preprocess(tensor):
-    return tensor*0.5 + 0.5
+    return tensor * 0.5 + 0.5
 
 
 def get_train_dataset(imgs_folder):
@@ -26,11 +27,11 @@ def get_train_dataset(imgs_folder):
 
 def get_train_loader():
     if config.data_mode in ['ms1m', 'concat']:
-        ms1m_ds, ms1m_class_num = get_train_dataset(config.ms1m_folder/'imgs')
+        ms1m_ds, ms1m_class_num = get_train_dataset(config.ms1m_folder / 'imgs')
         print('ms1m loader generated')
     if config.data_mode in ['vgg', 'concat']:
-        vgg_ds, vgg_class_num = get_train_dataset(config.vgg_folder/'imgs')
-        print('vgg loader generated')        
+        vgg_ds, vgg_class_num = get_train_dataset(config.vgg_folder / 'imgs')
+        print('vgg loader generated')
     if config.data_mode == 'vgg':
         ds = vgg_ds
         class_num = vgg_class_num
@@ -38,19 +39,20 @@ def get_train_loader():
         ds = ms1m_ds
         class_num = ms1m_class_num
     elif config.data_mode == 'concat':
-        for i,(url,label) in enumerate(vgg_ds.imgs):
+        for i, (url, label) in enumerate(vgg_ds.imgs):
             vgg_ds.imgs[i] = (url, label + ms1m_class_num)
-        ds = ConcatDataset([ms1m_ds,vgg_ds])
+        ds = ConcatDataset([ms1m_ds, vgg_ds])
         class_num = vgg_class_num + ms1m_class_num
     elif config.data_mode == 'emore':
-        ds, class_num = get_train_dataset(config.emore_folder/'imgs')
-    loader = DataLoader(ds, batch_size=config.batch_size, shuffle=True, pin_memory=config.pin_memory, num_workers=config.num_workers)
-    return loader, class_num 
+        ds, class_num = get_train_dataset(config.emore_folder / 'imgs')
+    loader = DataLoader(ds, batch_size=config.batch_size, shuffle=True, pin_memory=config.pin_memory,
+                        num_workers=config.num_workers)
+    return loader, class_num
 
 
 def get_val_pair(path, name):
-    carray = bcolz.carray(rootdir = path/name, mode='r')
-    issame = np.load(path/'{}_list.npy'.format(name))
+    carray = bcolz.carray(rootdir=path / name, mode='r')
+    issame = np.load(path / '{}_list.npy'.format(name))
     return carray, issame
 
 
@@ -59,7 +61,6 @@ def get_val_data(data_path):
     cfp_fp, cfp_fp_issame = get_val_pair(data_path, 'cfp_fp')
     lfw, lfw_issame = get_val_pair(data_path, 'lfw')
     return agedb_30, cfp_fp, lfw, agedb_30_issame, cfp_fp_issame, lfw_issame
-
 
 # class train_dataset(Dataset):
 #     def __init__(self, imgs_bcolz, label_bcolz, h_flip=True):
@@ -75,10 +76,10 @@ def get_val_data(data_path):
 #                 trans.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
 #             ])
 #         self.class_num = self.labels[-1] + 1
-        
+
 #     def __len__(self):
 #         return self.length
-    
+
 #     def __getitem__(self, index):
 #         img = torch.tensor(self.imgs[index+1], dtype=torch.float)
 #         label = torch.tensor(self.labels[index+1], dtype=torch.long)

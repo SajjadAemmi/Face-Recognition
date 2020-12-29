@@ -115,9 +115,9 @@ def gen_plot(fpr, tpr):
 
 def draw_box_name(bbox, name, score, show_score, frame):
     frame = cv2.rectangle(frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (255, 0, 0), 2)
-    frame = cv2.putText(frame, name, (bbox[0], bbox[1]), cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 0), 2, cv2.LINE_AA)
+    frame = cv2.putText(frame, name, (bbox[0], bbox[1]), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 0), 2, cv2.LINE_AA)
 
     if show_score:
         frame = cv2.putText(frame, str(score), (bbox[0], bbox[3]),
-                            cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 0), 4, cv2.LINE_AA)
+                            cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 0), 1, cv2.LINE_AA)
     return frame

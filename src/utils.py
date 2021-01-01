@@ -31,7 +31,7 @@ def separate_bn_paras(modules):
     return paras_only_bn, paras_wo_bn
 
 
-def prepare_dataset(model, tta=True):
+def prepare_dataset(model, device, tta=True):
     mtcnn = MTCNN()
     model.eval()
     embeddings = []
@@ -55,11 +55,11 @@ def prepare_dataset(model, tta=True):
                     with torch.no_grad():
                         if tta:
                             mirror = trans.functional.hflip(img)
-                            emb = model(config.test_transform(img).to(config.device).unsqueeze(0))
-                            emb_mirror = model(config.test_transform(mirror).to(config.device).unsqueeze(0))
+                            emb = model(config.test_transform(img).to(device).unsqueeze(0))
+                            emb_mirror = model(config.test_transform(mirror).to(device).unsqueeze(0))
                             embs.append(l2_norm(emb + emb_mirror))
                         else:                        
-                            embs.append(model(config.test_transform(img).to(config.device).unsqueeze(0)))
+                            embs.append(model(config.test_transform(img).to(device).unsqueeze(0)))
         if len(embs) == 0:
             continue
         embedding = torch.cat(embs).mean(0,keepdim=True)

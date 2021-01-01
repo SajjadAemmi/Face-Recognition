@@ -1,7 +1,7 @@
 import os
 import gdown
 
-path = './src/weights'
+path = './weights'
 
 if not os.path.exists(path):
     os.makedirs(path)

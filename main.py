@@ -11,17 +11,17 @@ from retina_face.retina_face import RetinaFaceModel
 
 parser = argparse.ArgumentParser(description='Face Recognition - ArcFace with RetinaFace')
 
-parser.add_argument('-i', '--input', help="input image or video path", default="input/George_Clooney.mp4", type=str)
-parser.add_argument('-o', '--output', help="output image or video path", default="output/George_Clooney.mp4", type=str)
+parser.add_argument('-i', '--input', help="input image or video path", default="input/IMG_0436.JPG", type=str)
+parser.add_argument('-o', '--output', help="output image or video path", default="output/IMG_0436.JPG", type=str)
+parser.add_argument("-s", "--save", help="whether to save", default=True, action="store_true")
+parser.add_argument("-u", "--update", help="whether perform update the dataset", default=False, action="store_true")
 parser.add_argument('--origin_size', default=True, type=str, help='Whether to use origin image size to evaluate')
 parser.add_argument('--fps', default=None, type=int, help='frame per second')
 parser.add_argument('--gpu', action="store_true", default=False, help='Use gpu inference')
 parser.add_argument('--model', default='mobilenet', help='mobilenet | resnet50')
-parser.add_argument("-s", "--save", help="whether to save", default=True, action="store_true")
-parser.add_argument("-u", "--update", help="whether perform update the dataset", default=False, action="store_true")
-parser.add_argument("-tta", "--tta", help="whether test time augmentation", default=True, action="store_true")
+parser.add_argument("--tta", help="whether test time augmentation", default=True, action="store_true")
 parser.add_argument("--show_score", help="whether show the confidence score", default=True, action="store_true")
-parser.add_argument("-sh", "--show", help="show results online", default=True, action="store_true")
+parser.add_argument("--show", help="show live result", default=False, action="store_true")
 
 args = parser.parse_args()
 
@@ -121,7 +121,7 @@ class FaceRecognizer:
 
     def _load_dataset(self):
         if self.update:
-            targets, names = prepare_dataset(self.learner.model, tta=self.tta)
+            targets, names = prepare_dataset(self.learner.model, self.device, tta=self.tta)
             print('dataset updated')
         else:
             targets, names = load_dataset()

@@ -1,19 +1,8 @@
-<<<<<<< HEAD
 torch
-bcolz
 easydict
 opencv_python
 torchvision
-cmake
 gdown
-=======
-torch==1.6.0
-easydict==1.9
-opencv_python==4.3.0.36
-torchvision==0.7.0
-dlib==19.21.0
-gdown==3.12.2
->>>>>>> ed3585084ed2d822059eb2fc30157031a0641fc1
 matplotlib==3.2.0
 numpy
 scipy

@@ -3,7 +3,6 @@ from torchvision import transforms as trans
 from torchvision.datasets import ImageFolder
 import numpy as np
 import cv2
-import bcolz
 from config import config
 from PIL import Image, ImageFile
 
@@ -51,7 +50,7 @@ def get_train_loader():
 
 
 def get_val_pair(path, name):
-    carray = bcolz.carray(rootdir=path / name, mode='r')
+    carray = np.load(path / name)
     issame = np.load(path / '{}_list.npy'.format(name))
     return carray, issame
 

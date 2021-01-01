@@ -11,7 +11,6 @@ import os
 from src.mtcnn import MTCNN
 from config import config
 import matplotlib.pyplot as plt
-plt.switch_backend('agg')
 
 
 def separate_bn_paras(modules):

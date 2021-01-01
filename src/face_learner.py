@@ -26,7 +26,7 @@ class FaceLearner(object):
             print('MobileFaceNet model generated')
         else:
             self.model = Backbone(config.net_depth, config.drop_ratio, config.net_mode).to(self.device)
-            print('{}_{} model generated'.format(config.net_mode, config.net_depth))
+            print(f'{config.net_mode}_{config.net_depth} model generated')
         
         if not inference:
             self.milestones = config.milestones

@@ -1,5 +1,4 @@
 torch==1.6.0
-bcolz==1.2.1
 easydict==1.9
 opencv_python==4.3.0.36
 torchvision==0.7.0

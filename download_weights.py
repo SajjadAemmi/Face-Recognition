@@ -1,6 +1,10 @@
 import os
 import gdown
 
+path = './src/weights'
+
+if not os.path.exists(path):
+    os.makedirs(path)
 
 mobilenet0_25_Final_url = "https://drive.google.com/uc?id=1du0ylskUVfw6GQqmGkCnS7IxM5GD2V0T"
 mobilenetV1X0_25_pretrain_url = "https://drive.google.com/uc?id=1vA_h3KxTF4kxfl7eSX8kxG92hKpQbvv8"
@@ -10,9 +14,6 @@ resnet50_final_url = "https://drive.google.com/uc?id=10xlOuLk4BPw92TEJYaqmA6gidl
 shape_predictor_68_face_landmarks_url = "https://drive.google.com/uc?id=1z0nq0Ubf-AMrn3XMJE37IHkQaM9jk9nt"
 
 if __name__ == '__main__':
-
-    path = './src/weights'
-
     output = os.path.join(path, 'mobilenet0.25_Final.pth')
     gdown.download(mobilenet0_25_Final_url, output, quiet=False)
 

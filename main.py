@@ -11,8 +11,8 @@ from retina_face.retina_face import RetinaFaceModel
 
 parser = argparse.ArgumentParser(description='Face Recognition - ArcFace with RetinaFace')
 
-parser.add_argument('-i', '--input', help="input image or video path", default="input/IMG_0436.JPG", type=str)
-parser.add_argument('-o', '--output', help="output image or video path", default="output/IMG_0436.JPG", type=str)
+parser.add_argument('-i', '--input', help="input image or video path", default="input/obama.mp4", type=str)
+parser.add_argument('-o', '--output', help="output image or video path", default="output/obama.mp4", type=str)
 parser.add_argument("-s", "--save", help="whether to save", default=True, action="store_true")
 parser.add_argument("-u", "--update", help="whether perform update the dataset", default=False, action="store_true")
 parser.add_argument('--origin_size', default=True, type=str, help='Whether to use origin image size to evaluate')

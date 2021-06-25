@@ -4,10 +4,24 @@ from typing import Any, Callable, Dict, List, Optional, Sequence
 import torch
 from torch import nn, Tensor
 from torch.nn.parameter import Parameter
-import torch.nn.functional as F
-import torch.utils.data as data
 
-from utils import make_divisible
+from utils.utils import make_divisible
+
+
+class Classifier(nn.Module):
+    def __init__(self, embedding_size, num_classes):
+        super(Classifier, self).__init__()
+
+        self.hard_wish = nn.Hardswish(inplace=True)
+        self.drop_out = nn.Dropout(p=0.2, inplace=True)
+        self.fc = nn.Linear(embedding_size, num_classes, bias=False)
+        self.normalized_fc = torch.nn.utils.weight_norm(self.fc)
+
+    def forward(self, x):
+        x = self.hard_wish(x)
+        x = self.drop_out(x)
+        x = self.fc(x)
+        return x
 
 
 class sa_layer(nn.Module):
@@ -60,37 +74,24 @@ class sa_layer(nn.Module):
 
 
 class ConvBNActivation(nn.Sequential):
-    def __init__(
-        self,
-        in_planes: int,
-        out_planes: int,
-        kernel_size: int = 3,
-        stride: int = 1,
-        groups: int = 1,
-        norm_layer: Optional[Callable[..., nn.Module]] = None,
-        activation_layer: Optional[Callable[..., nn.Module]] = None,
-        dilation: int = 1,
-    ) -> None:
+    def __init__(self, in_planes: int, out_planes: int, kernel_size: int = 3, stride: int = 1, groups: int = 1,
+                 norm_layer: Optional[Callable[..., nn.Module]] = None, activation_layer: Optional[Callable[..., nn.Module]] = None,
+                 dilation: int = 1) -> None:
         padding = (kernel_size - 1) // 2 * dilation
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         if activation_layer is None:
             activation_layer = nn.ReLU6
-        super(ConvBNReLU, self).__init__(
-            nn.Conv2d(in_planes, out_planes, kernel_size, stride, padding, dilation=dilation, groups=groups,
-                      bias=False),
-            norm_layer(out_planes),
-            activation_layer(inplace=True)
-        )
+        super(ConvBNReLU, self).__init__(nn.Conv2d(in_planes, out_planes, kernel_size, stride, padding,
+                                                   dilation=dilation, groups=groups, bias=False),
+                                         norm_layer(out_planes), activation_layer(inplace=True))
         self.out_channels = out_planes
 
 
-# necessary for backwards compatibility
-ConvBNReLU = ConvBNActivation
+ConvBNReLU = ConvBNActivation  # necessary for backwards compatibility
 
 
 class InvertedResidualConfig:
-
     def __init__(self, input_channels: int, kernel: int, expanded_channels: int, out_channels: int, use_se: bool,
                  activation: str, stride: int, dilation: int, width_mult: float):
         self.input_channels = self.adjust_channels(input_channels, width_mult)
@@ -108,9 +109,7 @@ class InvertedResidualConfig:
 
 
 class InvertedResidual(nn.Module):
-
-    def __init__(self, cnf: InvertedResidualConfig, norm_layer: Callable[..., nn.Module],
-                 se_layer: Callable[..., nn.Module] = SqueezeExcitation):
+    def __init__(self, cnf: InvertedResidualConfig, norm_layer: Callable[..., nn.Module]):
         super().__init__()
         if not (1 <= cnf.stride <= 2):
             raise ValueError('illegal stride value')
@@ -149,15 +148,13 @@ class InvertedResidual(nn.Module):
 
 
 class MobileNetV3(nn.Module):
-
-    def __init__(
-            self,
-            inverted_residual_setting: List[InvertedResidualConfig],
-            last_channel: int,
-            num_classes: int = 1000,
-            block: Optional[Callable[..., nn.Module]] = None,
-            norm_layer: Optional[Callable[..., nn.Module]] = None
-    ) -> None:
+    def __init__(self,
+                 inverted_residual_setting: List[InvertedResidualConfig],
+                 last_channel: int,
+                 num_classes: int = 1000,
+                 embedding_size: int = 512,
+                 block: Optional[Callable[..., nn.Module]] = None,
+                 norm_layer: Optional[Callable[..., nn.Module]] = None):
         """
         MobileNet V3 main class
         Args:
@@ -201,10 +198,11 @@ class MobileNetV3(nn.Module):
         self.features = nn.Sequential(*layers)
         self.avgpool = nn.AdaptiveAvgPool2d(1)
         self.classifier = nn.Sequential(
-            nn.Linear(lastconv_output_channels, last_channel),
-            nn.Hardswish(inplace=True),
-            nn.Dropout(p=0.2, inplace=True),
-            nn.Linear(last_channel, num_classes),
+            nn.Linear(lastconv_output_channels, embedding_size),
+            # nn.Linear(lastconv_output_channels, last_channel),
+            # nn.Hardswish(inplace=True),
+            # nn.Dropout(p=0.2, inplace=True),
+            # nn.Linear(last_channel, num_classes),
         )
 
         for m in self.modules():

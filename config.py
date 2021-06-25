@@ -7,20 +7,13 @@ from torchvision import transforms as trans
 # hyper parameters
 
 batch_size = 64
-epochs = 5
+epochs = 10
 lr = 0.001
 save_model = True
-num_workers = 0
-
-# colors
-
-RED   = "\033[1;31m"
-BLUE  = "\033[1;34m"
-CYAN  = "\033[1;36m"
-GREEN = "\033[0;32m"
-RESET = "\033[0;0m"
-BOLD    = "\033[;1m"
-REVERSE = "\033[;7m"
+num_workers = 2
+input_size = 224
+embedding_size = 512
+val = False
 
 
 config = edict()

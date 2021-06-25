@@ -1,9 +1,9 @@
 torch
 easydict
-opencv_python
+opencv-python
 torchvision
 gdown
-matplotlib==3.2.0
+matplotlib
 numpy
 scipy
 tqdm
@@ -13,3 +13,4 @@ scikit_learn
 tensorboardX
 grad-cam
 ttach
+colorama

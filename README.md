@@ -1,11 +1,19 @@
 # Face Recognition
-Real-time face recognition in unconstrained environments
+Real-time face recognition in unconstrained environments. Using [Shuffle Attention MobileNetV3](https://github.com/SajjadAemmi/SA-MobileNetV3) Architecture as Backbone, and modified ArcFace as loss function.
 
 This module can get a number of names as input for tracking the specific face.
 
-Using [Shuffle Attention MobileNetV3](https://github.com/SajjadAemmi/SA-MobileNetV3) Architecture as Backbone
-
 ![model arch](images/output.jpg)
+
+## Experiments
+
+#### on LFW
+
+Attempt | Parameters | Madds | Top1-acc
+--- | --- | --- | --- |
+MobileNetV3-Large |  |  |  | 
+SA-MobileNetV3-Large |  |  |  |
+SA-MobileNetV3-Large with modified ArcFace loss |  |  |  |
 
 ## Installation
 1- clone the repository
@@ -21,6 +29,13 @@ python download_weights.py
 
 
 ## Train
+Put your dataset in `./datasets` directory.
+Run the following command for train model on your own dataset:
+```
+python dataset_utils/preprocess_dataset.py --dataset-path ./datasets/CelebA 
+```
+
+In root directory of project, run the following command: 
 
 Run the following command for train model on your own dataset:
 ```

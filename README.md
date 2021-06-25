@@ -3,7 +3,9 @@ Real-time face recognition in unconstrained environments
 
 This module can get a number of names as input for tracking the specific face.
 
-<img src="./output/IMG_4383.JPG" width="80%">
+Using [Shuffle Attention MobileNetV3](https://github.com/SajjadAemmi/SA-MobileNetV3) Architecture as Backbone
+
+![model arch](images/output.jpg)
 
 ## Installation
 1- clone the repository
@@ -17,7 +19,30 @@ pip install -r requirements.txt
 python download_weights.py
 ```
 
-## Test and run
+
+## Train
+
+Run the following command for train model on your own dataset:
+```
+python train.py --dataset mnist 
+```
+
+## Test
+
+Run the following command for evaluation trained model on test dataset:
+```
+python test.py --dataset mnist
+```
+
+## Predict
+
+Run the following command for classification images:
+```
+python predict.py --input /path/to/image.jpg 
+```
+
+
+## Inference
 Put your input images or videos in ./input directory. The output will be saved in ./output. 
 In root directory of project, run the following command: 
 ```

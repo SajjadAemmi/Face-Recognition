@@ -11,3 +11,5 @@ Pillow
 PyInstaller
 scikit_learn
 tensorboardX
+grad-cam
+ttach

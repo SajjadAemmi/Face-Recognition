@@ -4,6 +4,25 @@ from pathlib import Path
 from torch.nn import CrossEntropyLoss
 from torchvision import transforms as trans
 
+# hyper parameters
+
+batch_size = 64
+epochs = 5
+lr = 0.001
+save_model = True
+num_workers = 0
+
+# colors
+
+RED   = "\033[1;31m"
+BLUE  = "\033[1;34m"
+CYAN  = "\033[1;36m"
+GREEN = "\033[0;32m"
+RESET = "\033[0;0m"
+BOLD    = "\033[;1m"
+REVERSE = "\033[;7m"
+
+
 config = edict()
 
 config.trained_model_path = join('weights', 'mobilenet0.25_Final.pth')

@@ -11,7 +11,7 @@ epochs = 10
 lr = 0.001
 save_model = True
 num_workers = 2
-input_size = 224
+input_size = 112
 embedding_size = 512
 val = False
 

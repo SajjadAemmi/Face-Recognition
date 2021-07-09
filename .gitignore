@@ -2,8 +2,7 @@
 __pycache__
 .vscode
 input/*.mp4
-output/*.mp4
-output/*/*.jpg
+output/
 weights
 face_bank
 .idea

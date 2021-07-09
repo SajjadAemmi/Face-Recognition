@@ -3,7 +3,7 @@ Real-time face recognition in unconstrained environments. Using [Shuffle Attenti
 
 This module can get a number of names as input for tracking the specific face.
 
-![model arch](images/output.jpg)
+![model arch](assets/output.jpg)
 
 ## Experiments
 

@@ -5,7 +5,7 @@ Created on Mon Apr 24 15:43:29 2017
 """
 import numpy as np
 import cv2
-from mtcnn_pytorch.src.matlab_cp2tform import get_similarity_transform_for_cv2
+from .matlab_cp2tform import get_similarity_transform_for_cv2
 
 
 # reference facial points, a list of coordinates (x,y)

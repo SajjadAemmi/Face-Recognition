@@ -9,8 +9,8 @@ from retina_face.models.retinaface import RetinaFace
 from retina_face.layers.functions.prior_box import PriorBox
 from retina_face.utils.box_utils import decode, decode_landm
 from retina_face.utils.nms.py_cpu_nms import py_cpu_nms
-from mtcnn_pytorch.src.align_trans import warp_and_crop_face
-from mtcnn_pytorch.src.align_trans import get_reference_facial_points
+from dataset_utils.mtcnn_pytorch.src.align_trans import warp_and_crop_face
+from dataset_utils.mtcnn_pytorch.src.align_trans import get_reference_facial_points
 from config import config
 
 

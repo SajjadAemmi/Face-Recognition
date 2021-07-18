@@ -15,6 +15,7 @@ input_size = 112
 embedding_size = 512
 val = False
 
+recognition_weights_path = join('weights', 'model_mobilefacenet.pth')
 
 config = edict()
 
@@ -25,16 +26,20 @@ config.top_k = 5000
 config.nms_threshold = 0.4
 config.keep_top_k = 750
 config.vis_threshold = 0.5
-config.recognition_threshold = 1.15
+recognition_threshold = 1.15
 
 config.data_path = Path(join('retina_face', 'data'))
-config.model_path = './weights'
+
+model_path = './weights'
+
 config.input_size = [112, 112]
 config.input_size = [256, 256]
 config.face_landmarks_path = "./weights/shape_predictor_68_face_landmarks.dat"
 
 config.embedding_size = 512
-config.use_mobilfacenet = False
+
+use_mobilenet = True
+
 config.net_depth = 50
 config.drop_ratio = 0.6
 config.net_mode = 'ir_se'  # or 'ir'

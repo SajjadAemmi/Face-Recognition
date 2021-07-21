@@ -1,17 +1,14 @@
 import os
-from retina_face.data.data_pipe import get_train_loader, get_val_data
 from src.model import Backbone, Arcface, MobileFaceNet, l2_norm
 from src.verifacation import evaluate
 import torch
-from torch import optim
 import numpy as np
 from tqdm import tqdm
-from tensorboardX import SummaryWriter
 from src.utils import get_time, gen_plot, hflip_batch, separate_bn_paras
 from PIL import Image
 from torchvision import transforms as trans
 import math
-from config import config
+import config
 from matplotlib import pyplot as plt
 plt.switch_backend('agg')
 
@@ -21,43 +18,14 @@ class FaceLearner(object):
 
         self.device = device
 
-        if config.use_mobilfacenet:
+        if config.use_mobilenet:
             self.model = MobileFaceNet(config.embedding_size).to(self.device)
             print('MobileFaceNet model generated')
         else:
             self.model = Backbone(config.net_depth, config.drop_ratio, config.net_mode).to(self.device)
             print(f'{config.net_mode}_{config.net_depth} model generated')
         
-        if not inference:
-            self.milestones = config.milestones
-            self.loader, self.class_num = get_train_loader()
-            self.writer = SummaryWriter(config.log_path)
-            self.step = 0
-            self.head = Arcface(embedding_size=config.embedding_size, classnum=self.class_num).to(self.device)
-            print('two model heads generated')
-            paras_only_bn, paras_wo_bn = separate_bn_paras(self.model)
-            
-            if config.use_mobilfacenet:
-                self.optimizer = optim.SGD([
-                                    {'params': paras_wo_bn[:-1], 'weight_decay': 4e-5},
-                                    {'params': [paras_wo_bn[-1]] + [self.head.kernel], 'weight_decay': 4e-4},
-                                    {'params': paras_only_bn}
-                                ], lr=config.lr, momentum=config.momentum)
-            else:
-                self.optimizer = optim.SGD([
-                                    {'params': paras_wo_bn + [self.head.kernel], 'weight_decay': 5e-4},
-                                    {'params': paras_only_bn}
-                                ], lr = config.lr, momentum = config.momentum)
-            print(self.optimizer)
-#             self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, patience=40, verbose=True)
-
-            print('optimizers generated')    
-            self.board_loss_every = len(self.loader)//100
-            self.evaluate_every = len(self.loader)//10
-            self.save_every = len(self.loader)//5
-            self.agedb_30, self.cfp_fp, self.lfw, self.agedb_30_issame, self.cfp_fp_issame, self.lfw_issame = get_val_data(self.loader.dataset.root.parent)
-        else:
-            self.threshold = config.recognition_threshold
+        self.threshold = config.recognition_threshold
     
     def save_state(self, conf, accuracy, to_save_folder=False, extra=None, model_only=False):
         if to_save_folder:
@@ -76,15 +44,8 @@ class FaceLearner(object):
                 ('optimizer_{}_accuracy:{}_step:{}_{}.pth'.format(get_time(), accuracy, self.step, extra)))
     
     def load_state(self, conf, fixed_str, from_save_folder=False, model_only=False):
-        if from_save_folder:
-            save_path = config.save_path
-        else:
-            save_path = config.model_path
-        self.model.load_state_dict(torch.load(os.path.join(save_path, f'model_{fixed_str}'), map_location=torch.device('cpu')))
-        if not model_only:
-            self.head.load_state_dict(torch.load(os.path.join(save_path, f'head_{fixed_str}')))
-            self.optimizer.load_state_dict(torch.load(os.path.join(save_path, f'optimizer_{fixed_str}')))
-        
+        self.model.load_state_dict(torch.load(config.recognition_weights_path, map_location=torch.device('cpu')))
+
     def board_val(self, db_name, accuracy, best_threshold, roc_curve_tensor):
         self.writer.add_scalar('{}_accuracy'.format(db_name), accuracy, self.step)
         self.writer.add_scalar('{}_best_threshold'.format(db_name), best_threshold, self.step)

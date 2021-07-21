@@ -1,6 +1,7 @@
-import cv2
-import argparse
 import os
+import argparse
+
+import cv2
 import torch
 
 from config import config
@@ -32,18 +33,15 @@ class FaceRecognizer:
         self.update = update
         self.origin_size = origin_size
 
-        if gpu and torch.cuda.is_available():
-            self.device = torch.device("cuda:0")
-        else:
-            self.device = torch.device("cpu")
+        device = torch.device('cuda') if torch.cuda.is_available() and gpu else torch.device('cpu')
 
         self.tta = tta
-        self.retina_face = RetinaFaceModel(gpu, origin_size)
+        self.retina_face = RetinaFaceModel(device, origin_size)
         self.learner = self._load_learner()
         self.targets, self.names = self._load_dataset()
 
     def process_image(self, image, show_score):
-        bounding_boxes, faces = self.retina_face.detect(image)
+        bounding_boxes, faces, landmarks = self.retina_face.detect(image)
         print('number of detected faces: ', len(faces))
 
         if len(faces) != 0:
@@ -59,7 +57,7 @@ class FaceRecognizer:
                     if results[idx] != -1:
                         name = self.names[results[idx] + 1]
                         score = round(results_score[idx].item(), 2)
-                        image = draw_box_name(bounding_box, name, score, show_score, image)
+                        image = draw_box_name(image, bounding_box, name, show_score, score)
                     else:
                         print('Unknown!')
         return image

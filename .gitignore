@@ -8,3 +8,4 @@ face_bank
 .idea
 .vs
 datasets/*
+*-checkpoint.ipynb

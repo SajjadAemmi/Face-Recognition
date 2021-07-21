@@ -9,55 +9,40 @@ from retina_face.models.retinaface import RetinaFace
 from retina_face.layers.functions.prior_box import PriorBox
 from retina_face.utils.box_utils import decode, decode_landm
 from retina_face.utils.nms.py_cpu_nms import py_cpu_nms
-from dataset_utils.mtcnn_pytorch.src.align_trans import warp_and_crop_face
-from dataset_utils.mtcnn_pytorch.src.align_trans import get_reference_facial_points
+from dataset_utils.mtcnn_pytorch.src.align_trans import get_reference_facial_points, warp_and_crop_face
 from config import config
 
 
 class RetinaFaceModel:
-    def __init__(self, gpu, origin_size):
+    def __init__(self, device, origin_size=True):
         self.trained_model_path = config.trained_model_path
-        self.gpu = gpu
+        self.device = device
         self.origin_size = origin_size
         self.confidence_threshold = config.confidence_threshold
         self.nms_threshold = config.nms_threshold
-        self.cfg = None
-        self.device = None
-        self.net = None
-        self.load_model()
+        self.config = None
 
-    def load_model(self):
         torch.set_grad_enabled(False)
         if config.network_type == "mobile0.25":
-            self.cfg = cfg_mnet
+            self.config = cfg_mnet
         elif config.network_type == "resnet50":
-            self.cfg = cfg_re50
-        model = RetinaFace(cfg=self.cfg, phase='test')
-        print('Loading pretrained model from {}'.format(self.trained_model_path))
-        if self.gpu:
-            device = torch.cuda.current_device()
-            pretrained_dict = torch.load(self.trained_model_path, map_location=lambda storage, loc: storage.cuda(device))
-        else:
-            pretrained_dict = torch.load(self.trained_model_path, map_location=torch.device('cpu'))
+            self.config = cfg_re50
+        model = RetinaFace(cfg=self.config, phase='test').to(self.device)
+
+        pretrained_dict = torch.load(self.trained_model_path, map_location=self.device)
 
         if "state_dict" in pretrained_dict.keys():
             pretrained_dict = self._remove_prefix(pretrained_dict['state_dict'], 'module.')
         else:
             pretrained_dict = self._remove_prefix(pretrained_dict, 'module.')
         self._check_keys(model, pretrained_dict)
-        model.load_state_dict(pretrained_dict, strict=False)
+        model.load_state_dict(pretrained_dict, strict=True)
         model.eval()
-        print('RetinaNet model loaded.')
-        # print(model)
+        
         cudnn.benchmark = True
 
-        if self.gpu and torch.cuda.is_available():
-            self.device = torch.device("cuda:0")
-        else:
-            self.device = torch.device("cpu")
-
-        model = model.to(self.device)
-        self.net = model
+        self.model = model
+        print('RetinaNet model loaded.')
 
     def detect(self, frame):
         reference = get_reference_facial_points(default_square=True)
@@ -72,22 +57,22 @@ class RetinaFaceModel:
         img = torch.from_numpy(img).unsqueeze(0)
         img = img.to(self.device)
         scale = scale.to(self.device)
-        loc, conf, landms = self.net(img)  # forward pass
+        loc, conf, landms = self.model(img)  # forward pass
 
-        priorbox = PriorBox(self.cfg, image_size=(im_height, im_width))
+        priorbox = PriorBox(self.config, image_size=(im_height, im_width))
         priors = priorbox.forward()
         priors = priors.to(self.device)
         prior_data = priors.data
-        boxes = decode(loc.data.squeeze(0), prior_data, self.cfg['variance'])
+        boxes = decode(loc.data.squeeze(0), prior_data, self.config['variance'])
         boxes = boxes * scale / resize
         boxes = boxes.cpu().numpy()
         scores = conf.squeeze(0).data.cpu().numpy()[:, 1]
-        landms = decode_landm(landms.data.squeeze(0), prior_data, self.cfg['variance'])
-        scale1 = torch.Tensor([img.shape[3], img.shape[2], img.shape[3], img.shape[2],
+        landms = decode_landm(landms.data.squeeze(0), prior_data, self.config['variance'])
+        scale = torch.Tensor([img.shape[3], img.shape[2], img.shape[3], img.shape[2],
                                img.shape[3], img.shape[2], img.shape[3], img.shape[2],
                                img.shape[3], img.shape[2]])
-        scale1 = scale1.to(self.device)
-        landms = landms * scale1 / resize
+        scale = scale.to(self.device)
+        landms = landms * scale / resize
         landms = landms.cpu().numpy()
 
         # ignore low scores
@@ -117,26 +102,21 @@ class RetinaFaceModel:
 
         faces = []
         trusted_idx = []
+        landmarks = []
 
-        for idx in range(len(landms)):
-            b = dets[idx, :]
-            # print(b)
-
+        for i in range(len(landms)):
+            b = dets[i, :]
             if b[4] > config.vis_threshold:
-                landmark = landms[idx]
-                facial5points = [[landmark[2 * j], landmark[2 * j + 1]] for j in range(5)]
-                # print(facial5points)
-                warped_face = warp_and_crop_face(np.array(frame), facial5points, reference, crop_size=(112, 112))
-                # cv2.imshow("Warped Face", warped_face)
-
+                landmark = [[landms[i][2 * j], landms[i][2 * j + 1]] for j in range(5)]
+                landmarks.append(landmark)
+                warped_face = warp_and_crop_face(np.array(frame), landmark, reference, crop_size=(112, 112))
+                
                 faces.append(Image.fromarray(warped_face))
-                trusted_idx.append(idx)
+                trusted_idx.append(i)
 
         trusted_dets = dets[trusted_idx, :]
-        # print("dets is {}".format(dets))
-        # print("trusted_dets is {}".format(trusted_dets))
 
-        return trusted_dets, faces
+        return trusted_dets, faces, landmarks
 
     @staticmethod
     def _remove_prefix(state_dict, prefix):

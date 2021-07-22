@@ -14,19 +14,19 @@ import config
 
 
 class RetinaFaceModel:
-    def __init__(self, device, origin_size=True):
+    def __init__(self, model_name, device):
         self.trained_model_path = config.trained_model_path
         self.device = device
-        self.origin_size = origin_size
         self.confidence_threshold = config.confidence_threshold
         self.nms_threshold = config.nms_threshold
         self.config = None
 
         torch.set_grad_enabled(False)
-        if config.network_type == "mobile0.25":
+        if model_name == "mobilenet":
             self.config = cfg_mnet
-        elif config.network_type == "resnet50":
+        elif model_name == "resnet50":
             self.config = cfg_re50
+        
         model = RetinaFace(cfg=self.config, phase='test').to(self.device)
 
         pretrained_dict = torch.load(self.trained_model_path, map_location=self.device)

@@ -20,10 +20,11 @@ parser.add_argument('-i', '--input', help="input image or video path", default="
 parser.add_argument('-o', '--output', help="output dir path", default="output", type=str)
 parser.add_argument("-s", "--save", help="whether to save", default=True, action="store_true")
 parser.add_argument("-u", "--update", help="whether perform update the dataset", default=False, action="store_true")
-parser.add_argument('--origin_size', default=True, type=str, help='Whether to use origin image size to evaluate')
+parser.add_argument('--origin-size', default=False, type=str, help='Whether to use origin image size to evaluate')
 parser.add_argument('--fps', default=None, type=int, help='frame per second')
 parser.add_argument('--gpu', action="store_true", default=True, help='Use gpu inference')
-parser.add_argument('--model', default='mobilenet', help='mobilenet | resnet50')
+parser.add_argument('--detection-model', default='mobilenet', help='mobilenet | resnet50')
+parser.add_argument('--recognition-model', default='mobilenet', help='mobilenet | resnet50')
 parser.add_argument("--tta", help="whether test time augmentation", default=True, action="store_true")
 parser.add_argument("--show_score", help="whether show the confidence score", default=True, action="store_true")
 parser.add_argument("--show", help="show live result", default=True, action="store_true")
@@ -40,9 +41,9 @@ class FaceRecognizer:
         self.device = torch.device('cuda') if torch.cuda.is_available() and gpu else torch.device('cpu')
 
         self.tta = tta
-        self.detector = RetinaFaceModel(self.device, origin_size)
+        self.detector = RetinaFaceModel(args.detection_model, self.device)
 
-        self.recognizer = FaceLearner(args.model, self.device)
+        self.recognizer = FaceLearner(args.recognition_model, self.device)
         self.recognizer.model.eval()
 
         self.targets, self.names = self._load_dataset()
@@ -60,7 +61,6 @@ class FaceRecognizer:
                 if results[idx] != -1:
                     name = self.names[results[idx] + 1]
                     score = round(results_score[idx].item(), 2)
-                    print(bounding_box)
                     bounding_box = np.array(bounding_box, dtype="int")
                     image = draw_box_name(image, bounding_box, name, show_score, score)
                 else:
@@ -108,6 +108,9 @@ class FaceRecognizer:
                     frame_count += 1
                     if fps and frame_count % (cap_fps // fps) != 0:
                         continue
+
+                    if not self.origin_size:
+                        frame = cv2.resize(frame, (0, 0), fx=0.5, fy=0.5)
 
                     print("processing frame {} ...".format(frame_count))
                     frame = self.process_image(frame, show_score)

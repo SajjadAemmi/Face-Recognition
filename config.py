@@ -19,7 +19,7 @@ mobilenet_recognition_weights_path = join('weights', 'model_mobilefacenet.pth')
 resnet50_recognition_weights_path = join('weights', 'model_ir_se50.pth')
 
 trained_model_path = join('weights', 'mobilenet0.25_Final.pth')
-network_type = 'mobile0.25'
+
 confidence_threshold = 0.02
 top_k = 5000
 nms_threshold = 0.4

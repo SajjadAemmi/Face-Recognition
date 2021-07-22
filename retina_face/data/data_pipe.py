@@ -3,7 +3,7 @@ from torchvision import transforms as trans
 from torchvision.datasets import ImageFolder
 import numpy as np
 import cv2
-from config import config
+import config
 from PIL import Image, ImageFile
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True

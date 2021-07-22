@@ -4,7 +4,7 @@ from src.verifacation import evaluate
 import torch
 import numpy as np
 from tqdm import tqdm
-from src.utils import get_time, gen_plot, hflip_batch, separate_bn_paras
+from src.utils import get_time, gen_plot, hflip_batch
 from PIL import Image
 from torchvision import transforms as trans
 import math
@@ -14,17 +14,17 @@ plt.switch_backend('agg')
 
 
 class FaceLearner(object):
-    def __init__(self, device, inference=False):
+    def __init__(self, model_name, device):
 
         self.device = device
 
-        if config.use_mobilenet:
+        if model_name == 'mobilenet':
             self.model = MobileFaceNet(config.embedding_size).to(self.device)
-            print('MobileFaceNet model generated')
-        else:
+            self.model.load_state_dict(torch.load(config.mobilenet_recognition_weights_path, map_location=self.device))
+        elif model_name == 'resnet50':
             self.model = Backbone(config.net_depth, config.drop_ratio, config.net_mode).to(self.device)
-            print(f'{config.net_mode}_{config.net_depth} model generated')
-        
+            self.model.load_state_dict(torch.load(config.resnet50_recognition_weights_path, map_location=self.device))
+         
         self.threshold = config.recognition_threshold
     
     def save_state(self, conf, accuracy, to_save_folder=False, extra=None, model_only=False):
@@ -42,9 +42,6 @@ class FaceLearner(object):
             torch.save(
                 self.optimizer.state_dict(), save_path /
                 ('optimizer_{}_accuracy:{}_step:{}_{}.pth'.format(get_time(), accuracy, self.step, extra)))
-    
-    def load_state(self, conf, fixed_str, from_save_folder=False, model_only=False):
-        self.model.load_state_dict(torch.load(config.recognition_weights_path, map_location=torch.device('cpu')))
 
     def board_val(self, db_name, accuracy, best_threshold, roc_curve_tensor):
         self.writer.add_scalar('{}_accuracy'.format(db_name), accuracy, self.step)

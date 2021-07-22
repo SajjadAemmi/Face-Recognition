@@ -15,57 +15,54 @@ input_size = 112
 embedding_size = 512
 val = False
 
-recognition_weights_path = join('weights', 'model_mobilefacenet.pth')
+mobilenet_recognition_weights_path = join('weights', 'model_mobilefacenet.pth')
+resnet50_recognition_weights_path = join('weights', 'model_ir_se50.pth')
 
-config = edict()
-
-config.trained_model_path = join('weights', 'mobilenet0.25_Final.pth')
-config.network_type = 'mobile0.25'
-config.confidence_threshold = 0.02
-config.top_k = 5000
-config.nms_threshold = 0.4
-config.keep_top_k = 750
-config.vis_threshold = 0.5
+trained_model_path = join('weights', 'mobilenet0.25_Final.pth')
+network_type = 'mobile0.25'
+confidence_threshold = 0.02
+top_k = 5000
+nms_threshold = 0.4
+keep_top_k = 750
+vis_threshold = 0.5
 recognition_threshold = 1.15
 
-config.data_path = Path(join('retina_face', 'data'))
+data_path = Path(join('retina_face', 'data'))
 
 model_path = './weights'
 
-config.input_size = [112, 112]
-config.input_size = [256, 256]
-config.face_landmarks_path = "./weights/shape_predictor_68_face_landmarks.dat"
+input_size = [112, 112]
+input_size = [256, 256]
+face_landmarks_path = "./weights/shape_predictor_68_face_landmarks.dat"
 
-config.embedding_size = 512
+embedding_size = 512
 
-use_mobilenet = True
+net_depth = 50
+drop_ratio = 0.6
+net_mode = 'ir_se'  # or 'ir'
 
-config.net_depth = 50
-config.drop_ratio = 0.6
-config.net_mode = 'ir_se'  # or 'ir'
-
-config.test_transform = trans.Compose([trans.ToTensor(),
+test_transform = trans.Compose([trans.ToTensor(),
                                        trans.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])])
-config.data_mode = 'emore'
-config.vgg_folder = config.data_path / 'faces_vgg_112x112'
-config.ms1m_folder = config.data_path / 'faces_ms1m_112x112'
-config.emore_folder = config.data_path / 'faces_emore'
-config.batch_size = 100  # irse net depth 50
-#   config.batch_size = 200 # mobilefacenet
+data_mode = 'emore'
+vgg_folder = data_path / 'faces_vgg_112x112'
+ms1m_folder = data_path / 'faces_ms1m_112x112'
+emore_folder = data_path / 'faces_emore'
+batch_size = 100  # irse net depth 50
+#   batch_size = 200 # mobilefacenet
 
 # Training Config
-#     config.weight_decay = 5e-4
-config.lr = 1e-3
-config.milestones = [12, 15, 18]
-config.momentum = 0.9
-config.pin_memory = True
-#         config.num_workers = 4 # when batchsize is 200
-config.num_workers = 3
-config.ce_loss = CrossEntropyLoss()
+#     weight_decay = 5e-4
+lr = 1e-3
+milestones = [12, 15, 18]
+momentum = 0.9
+pin_memory = True
+#         num_workers = 4 # when batchsize is 200
+num_workers = 3
+ce_loss = CrossEntropyLoss()
 
 # Inference Config
-config.dataset_path = Path('./dataset')
-config.face_limit = 10
+face_bank_path = Path('./face_bank')
+face_limit = 10
 # when inference, at maximum detect 10 faces in one image, my laptop is slow
-config.min_face_size = 20
+min_face_size = 20
 # the larger this value, the faster deduction, comes with tradeoff in small faces

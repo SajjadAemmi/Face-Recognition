@@ -1,10 +1,12 @@
 import os
 import argparse
+from pathlib import Path
 
 import cv2
 import torch
+from tqdm import tqdm
 
-from config import config
+import config
 from src.face_learner import FaceLearner
 from src.utils import load_dataset, prepare_dataset, draw_box_name
 from retina_face.retina_face import RetinaFaceModel
@@ -13,12 +15,12 @@ from retina_face.retina_face import RetinaFaceModel
 parser = argparse.ArgumentParser(description='Face Recognition - ArcFace with RetinaFace')
 
 parser.add_argument('-i', '--input', help="input image or video path", default="input/obama.mp4", type=str)
-parser.add_argument('-o', '--output', help="output image or video path", default="output/obama.mp4", type=str)
+parser.add_argument('-o', '--output', help="output dir path", default="output", type=str)
 parser.add_argument("-s", "--save", help="whether to save", default=True, action="store_true")
 parser.add_argument("-u", "--update", help="whether perform update the dataset", default=False, action="store_true")
 parser.add_argument('--origin_size', default=True, type=str, help='Whether to use origin image size to evaluate')
 parser.add_argument('--fps', default=None, type=int, help='frame per second')
-parser.add_argument('--gpu', action="store_true", default=False, help='Use gpu inference')
+parser.add_argument('--gpu', action="store_true", default=True, help='Use gpu inference')
 parser.add_argument('--model', default='mobilenet', help='mobilenet | resnet50')
 parser.add_argument("--tta", help="whether test time augmentation", default=True, action="store_true")
 parser.add_argument("--show_score", help="whether show the confidence score", default=True, action="store_true")
@@ -33,37 +35,41 @@ class FaceRecognizer:
         self.update = update
         self.origin_size = origin_size
 
-        device = torch.device('cuda') if torch.cuda.is_available() and gpu else torch.device('cpu')
+        self.device = torch.device('cuda') if torch.cuda.is_available() and gpu else torch.device('cpu')
 
         self.tta = tta
-        self.retina_face = RetinaFaceModel(device, origin_size)
-        self.learner = self._load_learner()
+        self.detector = RetinaFaceModel(self.device, origin_size)
+
+        self.recognizer = FaceLearner(args.model, self.device)
+        self.recognizer.model.eval()
+
         self.targets, self.names = self._load_dataset()
 
     def process_image(self, image, show_score):
-        bounding_boxes, faces, landmarks = self.retina_face.detect(image)
+        bounding_boxes, faces, landmarks = self.detector.detect(image)
         print('number of detected faces: ', len(faces))
 
         if len(faces) != 0:
-            if type == "all":
-                for bounding_box in bounding_boxes:
-                    image = draw_box_name(bounding_box, "unknown", image)
-            else:
-                results, results_score = self.learner(faces, self.targets, self.tta)
-                # print("retina results: {}".format(results))
-                # print("retina score: {}".format(results_score))
+            results, results_score = self.recognizer(faces, self.targets, self.tta)
+            # print("retina results: {}".format(results))
+            # print("retina score: {}".format(results_score))
 
-                for idx, bounding_box in enumerate(bounding_boxes):
-                    if results[idx] != -1:
-                        name = self.names[results[idx] + 1]
-                        score = round(results_score[idx].item(), 2)
-                        image = draw_box_name(image, bounding_box, name, show_score, score)
-                    else:
-                        print('Unknown!')
+            for idx, bounding_box in enumerate(bounding_boxes):
+                if results[idx] != -1:
+                    name = self.names[results[idx] + 1]
+                    score = round(results_score[idx].item(), 2)
+                    image = draw_box_name(image, bounding_box, name, show_score, score)
+                else:
+                    print('Unknown!')
         return image
 
     def __call__(self, input, output, save, show, show_score, fps):
-        file_name, file_ext = os.path.splitext(input)
+        file_name = Path(input).stem
+        _, file_ext = os.path.splitext(input)
+        output_file_path = os.path.join(output, file_name + file_ext)
+
+        if not os.path.exists(output):
+            os.makedirs(output)
 
         if file_ext.lower() == '.jpg':
             image = cv2.imread(input)
@@ -75,7 +81,7 @@ class FaceRecognizer:
                 cv2.imshow('face Capture', image)
                 cv2.waitKey()
             if save:
-                cv2.imwrite(output, image)
+                cv2.imwrite(output_file_path, image)
 
         elif file_ext.lower() == '.mp4' or input.isdigit():
             cap = cv2.VideoCapture(int(input)) if input.isdigit() else cv2.VideoCapture(input)
@@ -89,7 +95,7 @@ class FaceRecognizer:
 
             if save:
                 video_writer_fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-                video_writer = cv2.VideoWriter(output, video_writer_fourcc, cap_fps, (int(width), int(height)))
+                video_writer = cv2.VideoWriter(output_file_path, video_writer_fourcc, cap_fps, (int(width), int(height)))
 
             frame_count = 0
             while cap.isOpened():
@@ -119,7 +125,7 @@ class FaceRecognizer:
 
     def _load_dataset(self):
         if self.update:
-            targets, names = prepare_dataset(self.learner.model, self.device, tta=self.tta)
+            targets, names = prepare_dataset(self.recognizer.model, self.device, tta=self.tta)
             print('dataset updated')
         else:
             targets, names = load_dataset()
@@ -127,20 +133,7 @@ class FaceRecognizer:
         targets = targets.to(self.device)
         return targets, names
 
-    def _load_learner(self):
-        learner = FaceLearner(self.device, inference=True)
-        if self.device.type == 'cpu':
-            learner.load_state(config, 'cpu_final.pth', False, True)
-            print('learner cpu loaded')
-        else:
-            learner.load_state(config, 'final.pth', False, True)
-            print('learner gpu loaded')
-        learner.model.eval()
-        return learner
-
 
 if __name__ == '__main__':
     face_recognizer = FaceRecognizer(gpu=args.gpu, origin_size=args.origin_size, update=args.update, tta=args.tta)
-
-    face_recognizer(input=args.input, output=args.output, save=args.save, show_score=args.show_score, show=args.show,
-                    fps=args.fps)
+    face_recognizer(input=args.input, output=args.output, save=args.save, show_score=args.show_score, show=args.show, fps=args.fps)

@@ -9,7 +9,7 @@ from src.model import l2_norm
 import cv2
 import os
 from src.mtcnn import MTCNN
-from config import config
+import config
 import matplotlib.pyplot as plt
 
 
@@ -67,14 +67,14 @@ def prepare_dataset(model, device, tta=True):
         names.append(path.name)
     embeddings = torch.cat(embeddings)
     names = np.array(names)
-    torch.save(embeddings, config.dataset_path/'dataset.pth')
+    torch.save(embeddings, os.path.join(config.face_bank_path, 'face_bank.pth'))
     np.save(config.dataset_path/'names', names)
     return embeddings, names
 
 
 def load_dataset():
-    embeddings = torch.load(os.path.join(config.dataset_path, 'dataset.pth'))
-    names = np.load(os.path.join(config.dataset_path, 'names.npy'))
+    embeddings = torch.load(os.path.join(config.face_bank_path, 'face_bank.pth'))
+    names = np.load(os.path.join(config.face_bank_path, 'names.npy'))
     return embeddings, names
 
 

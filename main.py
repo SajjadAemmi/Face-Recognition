@@ -4,6 +4,8 @@ from pathlib import Path
 
 import cv2
 import torch
+import numpy as np
+from torch._C import dtype
 from tqdm import tqdm
 
 import config
@@ -24,7 +26,7 @@ parser.add_argument('--gpu', action="store_true", default=True, help='Use gpu in
 parser.add_argument('--model', default='mobilenet', help='mobilenet | resnet50')
 parser.add_argument("--tta", help="whether test time augmentation", default=True, action="store_true")
 parser.add_argument("--show_score", help="whether show the confidence score", default=True, action="store_true")
-parser.add_argument("--show", help="show live result", default=False, action="store_true")
+parser.add_argument("--show", help="show live result", default=True, action="store_true")
 
 args = parser.parse_args()
 
@@ -58,6 +60,8 @@ class FaceRecognizer:
                 if results[idx] != -1:
                     name = self.names[results[idx] + 1]
                     score = round(results_score[idx].item(), 2)
+                    print(bounding_box)
+                    bounding_box = np.array(bounding_box, dtype="int")
                     image = draw_box_name(image, bounding_box, name, show_score, score)
                 else:
                     print('Unknown!')

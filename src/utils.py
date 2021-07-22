@@ -32,11 +32,11 @@ def separate_bn_paras(modules):
 
 
 def prepare_dataset(model, device, tta=True):
-    mtcnn = MTCNN()
+    mtcnn = MTCNN(device)
     model.eval()
     embeddings = []
     names = ['Unknown']
-    for path in config.dataset_path.iterdir():
+    for path in config.face_bank_path.iterdir():
         if path.is_file():
             continue
         else:
@@ -68,7 +68,7 @@ def prepare_dataset(model, device, tta=True):
     embeddings = torch.cat(embeddings)
     names = np.array(names)
     torch.save(embeddings, os.path.join(config.face_bank_path, 'face_bank.pth'))
-    np.save(config.dataset_path/'names', names)
+    np.save(config.face_bank_path/'names', names)
     return embeddings, names
 
 
@@ -113,9 +113,9 @@ def gen_plot(fpr, tpr):
 
 
 def draw_box_name(image, bbox, name, show_score=False, score=None):
-    cv2.rectangle(image, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (255, 0, 0), 2)
-    cv2.putText(image, name, (bbox[0], bbox[1]), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 0), 2, cv2.LINE_AA)
+    image = cv2.rectangle(image, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (255, 0, 0), 2)
+    image = cv2.putText(image, name, (bbox[0], bbox[1]), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 0), 2, cv2.LINE_AA)
     if show_score:
-        cv2.putText(image, str(score), (bbox[0], bbox[3]), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 0), 1, cv2.LINE_AA)
+        image = cv2.putText(image, str(score), (bbox[0], bbox[3]), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 0), 1, cv2.LINE_AA)
     
     return image

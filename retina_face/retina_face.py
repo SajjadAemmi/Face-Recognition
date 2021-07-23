@@ -15,7 +15,6 @@ import config
 
 class RetinaFaceModel:
     def __init__(self, model_name, device):
-        self.trained_model_path = config.trained_model_path
         self.device = device
         self.confidence_threshold = config.confidence_threshold
         self.nms_threshold = config.nms_threshold
@@ -23,8 +22,10 @@ class RetinaFaceModel:
 
         torch.set_grad_enabled(False)
         if model_name == "mobilenet":
+            self.trained_model_path = config.mobilenet_detection_weights_path
             self.config = cfg_mnet
         elif model_name == "resnet50":
+            self.trained_model_path = config.resnet50_detection_weights_path
             self.config = cfg_re50
         
         model = RetinaFace(cfg=self.config, phase='test').to(self.device)

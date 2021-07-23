@@ -1,11 +1,9 @@
 import os
 import argparse
-from pathlib import Path
 
 import cv2
 import torch
 import numpy as np
-from torch._C import dtype
 from tqdm import tqdm
 
 import config
@@ -54,22 +52,18 @@ class FaceRecognizer:
 
         if len(faces) != 0:
             results, results_score = self.recognizer(faces, self.targets, self.tta)
-            # print("retina results: {}".format(results))
-            # print("retina score: {}".format(results_score))
-
             for idx, bounding_box in enumerate(bounding_boxes):
                 if results[idx] != -1:
                     name = self.names[results[idx] + 1]
-                    score = round(results_score[idx].item(), 2)
-                    bounding_box = np.array(bounding_box, dtype="int")
-                    image = draw_box_name(image, bounding_box, name, show_score, score)
                 else:
-                    print('Unknown!')
+                    name = 'Unknown'
+                score = round(results_score[idx].item(), 2)
+                bounding_box = np.array(bounding_box, dtype="int")
+                image = draw_box_name(image, bounding_box, name, show_score, score)
         return image
 
     def __call__(self, input, output, save, show, show_score, fps):
-        file_name = Path(input).stem
-        _, file_ext = os.path.splitext(input)
+        file_name, file_ext = os.path.splitext(os.path.basename(input))
         output_file_path = os.path.join(output, file_name + file_ext)
 
         if not os.path.exists(output):

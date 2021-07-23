@@ -8,7 +8,6 @@ import numpy as np
 
 
 class Flatten(nn.Module):
-
     def __init__(self):
         super(Flatten, self).__init__()
 
@@ -27,11 +26,8 @@ class Flatten(nn.Module):
 
 
 class PNet(nn.Module):
-
     def __init__(self):
-
         super(PNet, self).__init__()
-
         # suppose we have input with size HxW, then
         # after first layer: H - 2,
         # after pool: ceil((H - 2)/2),
@@ -76,11 +72,8 @@ class PNet(nn.Module):
 
 
 class RNet(nn.Module):
-
     def __init__(self):
-
         super(RNet, self).__init__()
-
         self.features = nn.Sequential(OrderedDict([
             ('conv1', nn.Conv2d(3, 28, 3, 1)),
             ('prelu1', nn.PReLU(28)),
@@ -122,11 +115,8 @@ class RNet(nn.Module):
 
 
 class ONet(nn.Module):
-
     def __init__(self):
-
         super(ONet, self).__init__()
-
         self.features = nn.Sequential(OrderedDict([
             ('conv1', nn.Conv2d(3, 32, 3, 1)),
             ('prelu1', nn.PReLU(32)),

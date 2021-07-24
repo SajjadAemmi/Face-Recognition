@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from retina_face.utils.box_utils import match, log_sum_exp
-from retina_face.data.config import cfg_mnet
+from retina_face_detector.utils.box_utils import match, log_sum_exp
+from retina_face_detector.data.config import cfg_mnet
 GPU = cfg_mnet['gpu_train']
 
 

@@ -4,8 +4,8 @@ import math
 from PIL import Image
 import numpy as np
 from .box_utils import nms, _preprocess
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-# device = 'cpu'
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 def run_first_stage(image, net, scale, threshold):
     """Run P-Net, generate bounding boxes, and do NMS.

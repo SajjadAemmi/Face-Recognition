@@ -1,16 +1,33 @@
+import io
+import os
+import functools
+import time
 from datetime import datetime
+
 from PIL import Image
 import numpy as np
-import io
 from torchvision import transforms as trans
-from retina_face.data.data_pipe import de_preprocess
+from retina_face_detector.data.data_pipe import de_preprocess
 import torch
-from src.model import l2_norm
+import matplotlib.pyplot as plt
 import cv2
-import os
+
 from src.mtcnn import MTCNN
 import config
-import matplotlib.pyplot as plt
+from src.model import l2_norm
+
+
+def timer(func):
+    """Print the runtime of the decorated function"""
+    @functools.wraps(func)
+    def wrapper_timer(*args, **kwargs):
+        start_time = time.perf_counter()    # 1
+        value = func(*args, **kwargs)
+        end_time = time.perf_counter()      # 2
+        run_time = end_time - start_time    # 3
+        print(f"Finished {func.__name__!r} in {run_time:.4f} secs")
+        return value
+    return wrapper_timer
 
 
 def separate_bn_paras(modules):
@@ -31,7 +48,7 @@ def separate_bn_paras(modules):
     return paras_only_bn, paras_wo_bn
 
 
-def prepare_dataset(model, device, tta=True):
+def prepare_face_bank(model, device, tta=True):
     mtcnn = MTCNN(device)
     model.eval()
     embeddings = []
@@ -72,7 +89,7 @@ def prepare_dataset(model, device, tta=True):
     return embeddings, names
 
 
-def load_dataset():
+def load_face_bank():
     embeddings = torch.load(os.path.join(config.face_bank_path, 'face_bank.pth'))
     names = np.load(os.path.join(config.face_bank_path, 'names.npy'))
     return embeddings, names

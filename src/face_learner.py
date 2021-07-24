@@ -4,18 +4,16 @@ from src.verifacation import evaluate
 import torch
 import numpy as np
 from tqdm import tqdm
-from src.utils import get_time, gen_plot, hflip_batch
+from src.utils import *
 from PIL import Image
 from torchvision import transforms as trans
 import math
 import config
-from matplotlib import pyplot as plt
-plt.switch_backend('agg')
 
 
-class FaceLearner(object):
+class FaceRecognizer(object):
     def __init__(self, model_name, device):
-
+        self.threshold = config.recognition_threshold
         self.device = device
 
         if model_name == 'mobilenet':
@@ -25,23 +23,7 @@ class FaceLearner(object):
             self.model = Backbone(config.net_depth, config.drop_ratio, config.net_mode).to(self.device)
             self.model.load_state_dict(torch.load(config.resnet50_recognition_weights_path, map_location=self.device))
          
-        self.threshold = config.recognition_threshold
-    
-    def save_state(self, conf, accuracy, to_save_folder=False, extra=None, model_only=False):
-        if to_save_folder:
-            save_path = config.save_path
-        else:
-            save_path = config.model_path
-        torch.save(
-            self.model.state_dict(), save_path /
-            ('model_{}_accuracy:{}_step:{}_{}.pth'.format(get_time(), accuracy, self.step, extra)))
-        if not model_only:
-            torch.save(
-                self.head.state_dict(), save_path /
-                ('head_{}_accuracy:{}_step:{}_{}.pth'.format(get_time(), accuracy, self.step, extra)))
-            torch.save(
-                self.optimizer.state_dict(), save_path /
-                ('optimizer_{}_accuracy:{}_step:{}_{}.pth'.format(get_time(), accuracy, self.step, extra)))
+        self.model.eval()
 
     def board_val(self, db_name, accuracy, best_threshold, roc_curve_tensor):
         self.writer.add_scalar('{}_accuracy'.format(db_name), accuracy, self.step)
@@ -79,109 +61,8 @@ class FaceLearner(object):
         roc_curve_tensor = trans.ToTensor()(roc_curve)
         return accuracy.mean(), best_thresholds.mean(), roc_curve_tensor
     
-    def find_lr(self, conf, init_value=1e-8, final_value=10., beta=0.98, bloding_scale=3., num=None):
-        if not num:
-            num = len(self.loader)
-        mult = (final_value / init_value)**(1 / num)
-        lr = init_value
-        for params in self.optimizer.param_groups:
-            params['lr'] = lr
-        self.model.train()
-        avg_loss = 0.
-        best_loss = 0.
-        batch_num = 0
-        losses = []
-        log_lrs = []
-        for i, (imgs, labels) in tqdm(enumerate(self.loader), total=num):
-
-            imgs = imgs.to(config.device)
-            labels = labels.to(config.device)
-            batch_num += 1          
-
-            self.optimizer.zero_grad()
-
-            embeddings = self.model(imgs)
-            thetas = self.head(embeddings, labels)
-            loss = config.ce_loss(thetas, labels)          
-          
-            #Compute the smoothed loss
-            avg_loss = beta * avg_loss + (1 - beta) * loss.item()
-            self.writer.add_scalar('avg_loss', avg_loss, batch_num)
-            smoothed_loss = avg_loss / (1 - beta**batch_num)
-            self.writer.add_scalar('smoothed_loss', smoothed_loss,batch_num)
-            #Stop if the loss is exploding
-            if batch_num > 1 and smoothed_loss > bloding_scale * best_loss:
-                print('exited with best_loss at {}'.format(best_loss))
-                plt.plot(log_lrs[10:-5], losses[10:-5])
-                return log_lrs, losses
-            #Record the best loss
-            if smoothed_loss < best_loss or batch_num == 1:
-                best_loss = smoothed_loss
-            #Store the values
-            losses.append(smoothed_loss)
-            log_lrs.append(math.log10(lr))
-            self.writer.add_scalar('log_lr', math.log10(lr), batch_num)
-            #Do the SGD step
-            #Update the lr for the next step
-
-            loss.backward()
-            self.optimizer.step()
-
-            lr *= mult
-            for params in self.optimizer.param_groups:
-                params['lr'] = lr
-            if batch_num > num:
-                plt.plot(log_lrs[10:-5], losses[10:-5])
-                return log_lrs, losses    
-
-    def train(self, conf, epochs):
-        self.model.train()
-        running_loss = 0.            
-        for e in range(epochs):
-            print('epoch {} started'.format(e))
-            if e == self.milestones[0]:
-                self.schedule_lr()
-            if e == self.milestones[1]:
-                self.schedule_lr()      
-            if e == self.milestones[2]:
-                self.schedule_lr()                                 
-            for imgs, labels in tqdm(iter(self.loader)):
-                imgs = imgs.to(config.device)
-                labels = labels.to(config.device)
-                self.optimizer.zero_grad()
-                embeddings = self.model(imgs)
-                thetas = self.head(embeddings, labels)
-                loss = config.ce_loss(thetas, labels)
-                loss.backward()
-                running_loss += loss.item()
-                self.optimizer.step()
-                
-                if self.step % self.board_loss_every == 0 and self.step != 0:
-                    loss_board = running_loss / self.board_loss_every
-                    self.writer.add_scalar('train_loss', loss_board, self.step)
-                    running_loss = 0.
-                
-                if self.step % self.evaluate_every == 0 and self.step != 0:
-                    accuracy, best_threshold, roc_curve_tensor = self.evaluate(conf, self.agedb_30, self.agedb_30_issame)
-                    self.board_val('agedb_30', accuracy, best_threshold, roc_curve_tensor)
-                    accuracy, best_threshold, roc_curve_tensor = self.evaluate(conf, self.lfw, self.lfw_issame)
-                    self.board_val('lfw', accuracy, best_threshold, roc_curve_tensor)
-                    accuracy, best_threshold, roc_curve_tensor = self.evaluate(conf, self.cfp_fp, self.cfp_fp_issame)
-                    self.board_val('cfp_fp', accuracy, best_threshold, roc_curve_tensor)
-                    self.model.train()
-                if self.step % self.save_every == 0 and self.step != 0:
-                    self.save_state(conf, accuracy)
-                    
-                self.step += 1
-                
-        self.save_state(conf, accuracy, to_save_folder=True, extra='final')
-
-    def schedule_lr(self):
-        for params in self.optimizer.param_groups:                 
-            params['lr'] /= 10
-        print(self.optimizer)
-
-    def __call__(self, faces, target_embs, tta=False):
+    @timer
+    def recognize(self, faces, target_embs, tta=False):
         '''
         faces : list of PIL Image
         target_embs : [n, 512] computed embeddings of faces in dataset

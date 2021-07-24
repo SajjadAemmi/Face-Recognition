@@ -23,7 +23,7 @@ mobilenet_recognition_weights_path = os.path.join(weights_dir_path, 'recognition
 resnet50_recognition_weights_path = os.path.join(weights_dir_path, 'recognition', 'model_ir_se50.pth')
 
 mobilenet_detection_weights_path = os.path.join(weights_dir_path, 'detection', 'mobilenet0.25_Final.pth')
-resnet50_detection_weights_path = os.path.join(weights_dir_path, 'detection', 'Resnet50_final.pth')
+resnet50_detection_weights_path = os.path.join(weights_dir_path, 'detection', 'Resnet50_Final.pth')
 
 face_landmarks_path = os.path.join(weights_dir_path, "shape_predictor_68_face_landmarks.dat")
 

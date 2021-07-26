@@ -1,7 +1,5 @@
 import os
-from easydict import EasyDict as edict
 from pathlib import Path
-from torch.nn import CrossEntropyLoss
 from torchvision import transforms as trans
 
 # Train hyper parameters

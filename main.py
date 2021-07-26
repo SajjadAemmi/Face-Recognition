@@ -1,4 +1,5 @@
 import os
+import time
 import argparse
 
 import cv2
@@ -25,7 +26,7 @@ parser.add_argument('--detection-model', default='mobilenet', help='mobilenet | 
 parser.add_argument('--recognition-model', default='mobilenet', help='mobilenet | resnet50')
 parser.add_argument("--tta", help="whether test time augmentation", default=False, action="store_true")
 parser.add_argument("--show_score", help="whether show the confidence score", default=True, action="store_true")
-parser.add_argument("--show", help="show live result", default=False, action="store_true")
+parser.add_argument("--show", help="show live result", default=True, action="store_true")
 
 args = parser.parse_args()
 
@@ -50,7 +51,6 @@ class FaceIdentifier:
        
     def process_image(self, image, show_score):
         bounding_boxes, faces, landmarks = self.detector.detect(image)
-        print('number of detected faces: ', len(faces))
 
         if len(faces) != 0:
             results, results_score = self.recognizer.recognize(faces, self.targets, self.tta)
@@ -69,7 +69,6 @@ class FaceIdentifier:
         file_name, file_ext = os.path.splitext(os.path.basename(input))
         output_file_path = os.path.join(output, file_name + file_ext)
         
-
         if not os.path.exists(output):
             os.makedirs(output)
 
@@ -101,27 +100,33 @@ class FaceIdentifier:
 
             frame_count = 0
             while cap.isOpened():
+                tic = time.time()
                 ret, frame = cap.read()
-                if ret:
-                    frame_count += 1
-                    if fps and frame_count % (cap_fps // fps) != 0:
-                        continue
-
-                    if not self.origin_size:
-                        frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
-
-                    print("processing frame {} ...".format(frame_count))
-                    frame = self.process_image(frame, show_score)
-
-                    if show:
-                        cv2.imshow('face Capture', frame)
-                    if save:
-                        video_writer.write(frame)
-
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
-                        break
-                else:
+                if not ret:
                     break
+
+                frame_count += 1
+                if fps and frame_count % (cap_fps // fps) != 0:
+                    continue
+
+                if not self.origin_size:
+                    frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
+
+                print("processing frame {} ...".format(frame_count))
+                frame = self.process_image(frame, show_score)
+
+                toc = time.time()
+                real_fps = round(1 / (toc - tic), 4)
+                frame = cv2.putText(frame, f"fps: {real_fps}", (10, 20), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 0), 1, cv2.LINE_AA)
+
+                if show:
+                    cv2.imshow('face Capture', frame)
+                if save:
+                    video_writer.write(frame)
+
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+
             cap.release()
             if save:
                 video_writer.release()

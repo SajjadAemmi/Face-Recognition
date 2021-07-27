@@ -1,6 +1,5 @@
 import os
 from src.model import Backbone, Arcface, MobileFaceNet, l2_norm
-from src.verifacation import evaluate
 import torch
 import numpy as np
 from tqdm import tqdm
@@ -32,34 +31,6 @@ class FaceRecognizer(object):
 #         self.writer.add_scalar('{}_val:true accept ratio'.format(db_name), val, self.step)
 #         self.writer.add_scalar('{}_val_std'.format(db_name), val_std, self.step)
 #         self.writer.add_scalar('{}_far:False Acceptance Ratio'.format(db_name), far, self.step)
-        
-    def evaluate(self, conf, carray, issame, nrof_folds=5, tta=False):
-        self.model.eval()
-        idx = 0
-        embeddings = np.zeros([len(carray), config.embedding_size])
-        with torch.no_grad():
-            while idx + config.batch_size <= len(carray):
-                batch = torch.tensor(carray[idx:idx + config.batch_size])
-                if tta:
-                    fliped = hflip_batch(batch)
-                    emb_batch = self.model(batch.to(config.device)) + self.model(fliped.to(config.device))
-                    embeddings[idx:idx + config.batch_size] = l2_norm(emb_batch)
-                else:
-                    embeddings[idx:idx + config.batch_size] = self.model(batch.to(config.device)).cpu()
-                idx += config.batch_size
-            if idx < len(carray):
-                batch = torch.tensor(carray[idx:])            
-                if tta:
-                    fliped = hflip_batch(batch)
-                    emb_batch = self.model(batch.to(config.device)) + self.model(fliped.to(config.device))
-                    embeddings[idx:] = l2_norm(emb_batch)
-                else:
-                    embeddings[idx:] = self.model(batch.to(config.device)).cpu()
-        tpr, fpr, accuracy, best_thresholds = evaluate(embeddings, issame, nrof_folds)
-        buf = gen_plot(fpr, tpr)
-        roc_curve = Image.open(buf)
-        roc_curve_tensor = trans.ToTensor()(roc_curve)
-        return accuracy.mean(), best_thresholds.mean(), roc_curve_tensor
     
     @timer
     def recognize(self, faces, target_embs, tta=False):

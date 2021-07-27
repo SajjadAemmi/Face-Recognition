@@ -1,4 +1,5 @@
 import os
+import time
 import argparse
 
 import cv2
@@ -13,20 +14,18 @@ from retina_face_detector.face_detector import FaceDetector
 
 
 parser = argparse.ArgumentParser(description='Face Recognition - ArcFace with RetinaFace')
-
-parser.add_argument('-i', '--input', help="input image or video path", default="input/obama.mp4", type=str)
-parser.add_argument('-o', '--output', help="output dir path", default="output", type=str)
-parser.add_argument("-s", "--save", help="whether to save", default=False, action="store_true")
-parser.add_argument("-u", "--update", help="whether perform update the dataset", default=False, action="store_true")
-parser.add_argument('--origin-size', default=False, type=str, help='Whether to use origin image size to evaluate')
-parser.add_argument('--fps', default=5, type=int, help='frame per second')
-parser.add_argument('--gpu', action="store_true", default=True, help='Use gpu inference')
-parser.add_argument('--detection-model', default='resnet50', help='mobilenet | resnet50')
-parser.add_argument('--recognition-model', default='resnet50', help='mobilenet | resnet50')
+parser.add_argument("--input", default="rtsp://root:root@192.168.1.181:554/cam0_0", help="input image or video path", type=str)
+parser.add_argument("--output", default="output", help="output dir path", type=str)
+parser.add_argument("--save", default=False, help="whether to save", action="store_true")
+parser.add_argument("--update", default=False, help="whether perform update the dataset", action="store_true")
+parser.add_argument("--origin-size", default=False, type=str, help='Whether to use origin image size to evaluate')
+parser.add_argument("--fps", default=None, type=int, help='frame per second')
+parser.add_argument("--gpu", action="store_true", default=True, help='Use gpu inference')
+parser.add_argument("--detection-model", default='mobilenet', help='mobilenet | resnet50')
+parser.add_argument("--recognition-model", default='mobilenet', help='mobilenet | resnet50')
 parser.add_argument("--tta", help="whether test time augmentation", default=False, action="store_true")
 parser.add_argument("--show_score", help="whether show the confidence score", default=True, action="store_true")
 parser.add_argument("--show", help="show live result", default=True, action="store_true")
-
 args = parser.parse_args()
 
 
@@ -50,7 +49,6 @@ class FaceIdentifier:
        
     def process_image(self, image, show_score):
         bounding_boxes, faces, landmarks = self.detector.detect(image)
-        print('number of detected faces: ', len(faces))
 
         if len(faces) != 0:
             results, results_score = self.recognizer.recognize(faces, self.targets, self.tta)
@@ -72,7 +70,7 @@ class FaceIdentifier:
         if not os.path.exists(output):
             os.makedirs(output)
 
-        if file_ext.lower() == '.jpg':
+        if file_ext.lower() in ['.jpg', '.jpeg', '.png', '.bmp']:
             image = cv2.imread(input)
             if not self.origin_size:
                 image = cv2.resize(image, (0, 0), fx=0.25, fy=0.25)
@@ -84,9 +82,8 @@ class FaceIdentifier:
             if save:
                 cv2.imwrite(output_file_path, image)
 
-        elif file_ext.lower() == '.mp4' or input.isdigit():
-            # cap = cv2.VideoCapture(int(input)) if input.isdigit() else cv2.VideoCapture(input)
-            cap = cv2.VideoCapture("rtsp://root:root@192.168.1.181:554/cam0_0")
+        else:
+            cap = cv2.VideoCapture(int(input)) if input.isdigit() else cv2.VideoCapture(input)
             width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
             height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
             cap_fps = cap.get(cv2.CAP_PROP_FPS)
@@ -101,27 +98,33 @@ class FaceIdentifier:
 
             frame_count = 0
             while cap.isOpened():
+                tic = time.time()
                 ret, frame = cap.read()
-                if ret:
-                    frame_count += 1
-                    if fps and frame_count % (cap_fps // fps) != 0:
-                        continue
-
-                    if not self.origin_size:
-                        frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
-
-                    print("processing frame {} ...".format(frame_count))
-                    frame = self.process_image(frame, show_score)
-
-                    if show:
-                        cv2.imshow('face Capture', frame)
-                    if save:
-                        video_writer.write(frame)
-
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
-                        break
-                else:
+                if not ret:
                     break
+
+                frame_count += 1
+                if fps and frame_count % (cap_fps // fps) != 0:
+                    continue
+
+                if not self.origin_size:
+                    frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
+
+                print("processing frame {} ...".format(frame_count))
+                frame = self.process_image(frame, show_score)
+
+                toc = time.time()
+                real_fps = round(1 / (toc - tic), 4)
+                frame = cv2.putText(frame, f"fps: {real_fps}", (10, 20), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 0), 1, cv2.LINE_AA)
+
+                if show:
+                    cv2.imshow('face Capture', frame)
+                if save:
+                    video_writer.write(frame)
+
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+
             cap.release()
             if save:
                 video_writer.release()

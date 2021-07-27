@@ -19,13 +19,13 @@ parser.add_argument('-o', '--output', help="output dir path", default="output", 
 parser.add_argument("-s", "--save", help="whether to save", default=False, action="store_true")
 parser.add_argument("-u", "--update", help="whether perform update the dataset", default=False, action="store_true")
 parser.add_argument('--origin-size', default=False, type=str, help='Whether to use origin image size to evaluate')
-parser.add_argument('--fps', default=None, type=int, help='frame per second')
+parser.add_argument('--fps', default=5, type=int, help='frame per second')
 parser.add_argument('--gpu', action="store_true", default=True, help='Use gpu inference')
-parser.add_argument('--detection-model', default='mobilenet', help='mobilenet | resnet50')
-parser.add_argument('--recognition-model', default='mobilenet', help='mobilenet | resnet50')
+parser.add_argument('--detection-model', default='resnet50', help='mobilenet | resnet50')
+parser.add_argument('--recognition-model', default='resnet50', help='mobilenet | resnet50')
 parser.add_argument("--tta", help="whether test time augmentation", default=False, action="store_true")
 parser.add_argument("--show_score", help="whether show the confidence score", default=True, action="store_true")
-parser.add_argument("--show", help="show live result", default=False, action="store_true")
+parser.add_argument("--show", help="show live result", default=True, action="store_true")
 
 args = parser.parse_args()
 
@@ -69,7 +69,6 @@ class FaceIdentifier:
         file_name, file_ext = os.path.splitext(os.path.basename(input))
         output_file_path = os.path.join(output, file_name + file_ext)
         
-
         if not os.path.exists(output):
             os.makedirs(output)
 
@@ -86,7 +85,8 @@ class FaceIdentifier:
                 cv2.imwrite(output_file_path, image)
 
         elif file_ext.lower() == '.mp4' or input.isdigit():
-            cap = cv2.VideoCapture(int(input)) if input.isdigit() else cv2.VideoCapture(input)
+            # cap = cv2.VideoCapture(int(input)) if input.isdigit() else cv2.VideoCapture(input)
+            cap = cv2.VideoCapture("rtsp://root:root@192.168.1.181:554/cam0_0")
             width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
             height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
             cap_fps = cap.get(cv2.CAP_PROP_FPS)

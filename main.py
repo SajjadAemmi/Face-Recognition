@@ -14,12 +14,12 @@ from retina_face_detector.face_detector import FaceDetector
 
 
 parser = argparse.ArgumentParser(description='Face Recognition - ArcFace with RetinaFace')
-parser.add_argument("--input", default="rtsp://root:root@192.168.1.181:554/cam0_0", help="input image or video path", type=str)
+parser.add_argument("--input", default="0", help="input image or video path", type=str)
 parser.add_argument("--output", default="output", help="output dir path", type=str)
 parser.add_argument("--save", default=False, help="whether to save", action="store_true")
 parser.add_argument("--update", default=False, help="whether perform update the dataset", action="store_true")
 parser.add_argument("--origin-size", default=False, type=str, help='Whether to use origin image size to evaluate')
-parser.add_argument("--fps", default=None, type=int, help='frame per second')
+parser.add_argument("--fps", default=10, type=int, help='frame per second')
 parser.add_argument("--gpu", action="store_true", default=True, help='Use gpu inference')
 parser.add_argument("--detection-model", default='mobilenet', help='mobilenet | resnet50')
 parser.add_argument("--recognition-model", default='mobilenet', help='mobilenet | resnet50')
@@ -84,9 +84,13 @@ class FaceIdentifier:
 
         else:
             cap = cv2.VideoCapture(int(input)) if input.isdigit() else cv2.VideoCapture(input)
+            cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+
             width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
             height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
             cap_fps = cap.get(cv2.CAP_PROP_FPS)
+
+            frame_rate = cap_fps // fps if cap_fps > fps else cap_fps
 
             if not self.origin_size:
                 width = width // 2
@@ -104,11 +108,11 @@ class FaceIdentifier:
                     break
 
                 frame_count += 1
-                if fps and frame_count % (cap_fps // fps) != 0:
+                if fps and frame_count % frame_rate != 0:
                     continue
 
                 if not self.origin_size:
-                    frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
+                    frame = cv2.resize(frame, (0, 0), fx=0.5, fy=0.5)
 
                 print("processing frame {} ...".format(frame_count))
                 frame = self.process_image(frame, show_score)

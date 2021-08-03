@@ -1,5 +1,4 @@
 torch
-easydict
 opencv-python
 torchvision
 gdown

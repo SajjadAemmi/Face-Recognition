@@ -16,7 +16,7 @@ from retina_face_detector.face_detector import FaceDetector
 parser = argparse.ArgumentParser(description='Face Recognition - ArcFace with RetinaFace')
 parser.add_argument("--input", default="0", help="input image or video path", type=str)
 parser.add_argument("--output", default="output", help="output dir path", type=str)
-parser.add_argument("--save", default=False, help="whether to save", action="store_true")
+parser.add_argument("--save", default=True, help="whether to save", action="store_true")
 parser.add_argument("--update", default=False, help="whether perform update the dataset", action="store_true")
 parser.add_argument("--origin-size", default=False, type=str, help='Whether to use origin image size to evaluate')
 parser.add_argument("--gpu", action="store_true", default=True, help='Use gpu inference')

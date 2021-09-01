@@ -95,7 +95,7 @@ class RetinaFace(nn.Module):
             landmarkhead.append(LandmarkHead(inchannels,anchor_num))
         return landmarkhead
 
-    def forward(self,inputs):
+    def forward(self, inputs):
         out = self.body(inputs)
 
         # FPN

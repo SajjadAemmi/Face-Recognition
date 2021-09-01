@@ -19,10 +19,10 @@ parser.add_argument("--output", default="output", help="output dir path", type=s
 parser.add_argument("--save", default=False, help="whether to save", action="store_true")
 parser.add_argument("--update", default=False, help="whether perform update the dataset", action="store_true")
 parser.add_argument("--origin-size", default=False, type=str, help='Whether to use origin image size to evaluate')
-parser.add_argument("--fps", default=5, type=int, help='frame per second')
+parser.add_argument("--fps", default=None, type=int, help='frame per second')
 parser.add_argument("--gpu", action="store_true", default=True, help='Use gpu inference')
-parser.add_argument("--detection-model", default='mobilenet', help='mobilenet | resnet50')
-parser.add_argument("--recognition-model", default='mobilenet', help='mobilenet | resnet50')
+parser.add_argument("--detection-model", default='resnet50', help='mobilenet | resnet50')
+parser.add_argument("--recognition-model", default='resnet50', help='mobilenet | resnet50')
 parser.add_argument("--tta", help="whether test time augmentation", default=False, action="store_true")
 parser.add_argument("--show_score", help="whether show the confidence score", default=True, action="store_true")
 parser.add_argument("--show", help="show live result", default=True, action="store_true")
@@ -61,8 +61,9 @@ class FaceIdentifier:
         width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
         height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
         cap_fps = cap.get(cv2.CAP_PROP_FPS)
+        print('input video fps:', cap_fps)
 
-        frame_rate = cap_fps // fps if cap_fps > fps else cap_fps
+        frame_rate = cap_fps // fps if fps is not None and cap_fps > fps else cap_fps
 
         if not self.origin_size:
             width = width // 2
@@ -80,7 +81,7 @@ class FaceIdentifier:
                 break
 
             frame_count += 1
-            if fps and frame_count % frame_rate != 0:
+            if fps is not None and frame_count % frame_rate != 0:
                 continue
 
             if not self.origin_size:

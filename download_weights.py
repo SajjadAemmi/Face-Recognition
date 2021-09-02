@@ -2,7 +2,7 @@ import os
 import gdown
 
 if __name__ == '__main__':
-    weights_path = './weights2'
+    weights_path = './weights'
 
     if not os.path.exists(weights_path):
         os.makedirs(weights_path)

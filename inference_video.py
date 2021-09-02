@@ -95,6 +95,9 @@ class FaceIdentifier:
             if len(faces) != 0:
                 results, results_score = self.recognizer.recognize(faces, self.targets, self.tta)
                 for idx, bounding_box in enumerate(bounding_boxes):
+                    # cv2.imshow('s', faces[idx])
+                    # cv2.waitKey()
+
                     if results[idx] != -1:
                         name = self.names[results[idx] + 1]
                     else:

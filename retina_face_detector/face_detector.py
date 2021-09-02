@@ -1,5 +1,6 @@
 import cv2
 from PIL import Image
+from numpy.core.fromnumeric import size
 import torch
 import torch.backends.cudnn as cudnn
 import numpy as np
@@ -16,6 +17,8 @@ from src.utils import *
 
 class FaceDetector:
     def __init__(self, model_name, device):
+
+        self.top_k = 10
         self.device = device
         self.confidence_threshold = config.confidence_threshold
         self.nms_threshold = config.nms_threshold
@@ -50,10 +53,11 @@ class FaceDetector:
         reference = get_reference_facial_points(default_square=True)
 
         img = np.float32(frame)
-        resize = 1
+        # im_height, im_width = 640, 640
         im_height, im_width, _ = img.shape
-
         scale = torch.Tensor([img.shape[1], img.shape[0], img.shape[1], img.shape[0]])
+        # img = cv2.resize(img, (im_height, im_width))
+
         img -= (104, 117, 123)
         img = img.transpose(2, 0, 1)
         img = torch.from_numpy(img).unsqueeze(0)
@@ -66,15 +70,16 @@ class FaceDetector:
         priors = priors.to(self.device)
         prior_data = priors.data
         boxes = decode(loc.data.squeeze(0), prior_data, self.config['variance'])
-        boxes = boxes * scale / resize
+        boxes = boxes * scale
         boxes = boxes.cpu().numpy()
         scores = conf.squeeze(0).data.cpu().numpy()[:, 1]
         landms = decode_landm(landms.data.squeeze(0), prior_data, self.config['variance'])
         scale = torch.Tensor([img.shape[3], img.shape[2], img.shape[3], img.shape[2],
                                img.shape[3], img.shape[2], img.shape[3], img.shape[2],
                                img.shape[3], img.shape[2]])
+                               
         scale = scale.to(self.device)
-        landms = landms * scale / resize
+        landms = landms * scale
         landms = landms.cpu().numpy()
 
         # ignore low scores
@@ -85,7 +90,7 @@ class FaceDetector:
 
         # keep top-K before NMS
         order = scores.argsort()[::-1]
-        # order = scores.argsort()[::-1][:args_retina.top_k]
+        order = scores.argsort()[::-1][:self.top_k]
         boxes = boxes[order]
         landms = landms[order]
         scores = scores[order]
@@ -96,29 +101,21 @@ class FaceDetector:
         dets = dets[keep, :]
         landms = landms[keep]
 
-        # keep top-K faster NMS
-        # dets = dets[:args_retina.keep_top_k, :]
-        # landms = landms[:args_retina.keep_top_k, :]
-
-        # dets = np.concatenate((dets, landms), axis=1)
-
         faces = []
-        trusted_idx = []
         landmarks = []
+        bboxes = []
 
         for i in range(len(landms)):
-            b = dets[i, :]
-            if b[4] > config.vis_threshold:
+            bbox = dets[i, :]
+            if bbox[4] > config.vis_threshold:
                 landmark = [[landms[i][2 * j], landms[i][2 * j + 1]] for j in range(5)]
-                landmarks.append(landmark)
-                warped_face = warp_and_crop_face(np.array(frame), landmark, reference, crop_size=(112, 112))
+                warped_face = warp_and_crop_face(frame, landmark, reference, crop_size=(112, 112))
                 
-                faces.append(Image.fromarray(warped_face))
-                trusted_idx.append(i)
+                landmarks.append(landmark)
+                faces.append(warped_face)
+                bboxes.append(bbox)
 
-        trusted_dets = dets[trusted_idx, :]
-
-        return trusted_dets, faces, landmarks
+        return bboxes, faces, landmarks
 
     @staticmethod
     def _remove_prefix(state_dict, prefix):

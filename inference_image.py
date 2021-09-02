@@ -8,7 +8,7 @@ import numpy as np
 from tqdm import tqdm
 
 import config
-from src.face_learner import FaceRecognizer
+from src.face_recognizer import FaceRecognizer
 from src.utils import *
 from retina_face_detector.face_detector import FaceDetector
 

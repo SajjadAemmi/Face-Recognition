@@ -44,42 +44,40 @@ class FaceDetector:
         model.eval()
         
         cudnn.benchmark = True
+        self.reference = get_reference_facial_points(default_square=True)
+
+        self.im_height, self.im_width = 640, 640
+        priorbox = PriorBox(self.config, image_size=(self.im_height, self.im_width))
+        priors = priorbox.forward()
+        priors = priors.to(self.device)
+        self.prior_data = priors.data
 
         self.model = model
         print('RetinaNet model loaded.')
 
     @timer
     def detect(self, frame):
-        reference = get_reference_facial_points(default_square=True)
-
         img = np.float32(frame)
-        # im_height, im_width = 640, 640
-        im_height, im_width, _ = img.shape
-        scale = torch.Tensor([img.shape[1], img.shape[0], img.shape[1], img.shape[0]])
-        # img = cv2.resize(img, (im_height, im_width))
+        boxes_scale = torch.Tensor([img.shape[1], img.shape[0], img.shape[1], img.shape[0]]).to(self.device)
+        landms_scale = torch.Tensor([img.shape[1], img.shape[0], img.shape[1], img.shape[0],
+                                   img.shape[1], img.shape[0], img.shape[1], img.shape[0],
+                                   img.shape[1], img.shape[0]]).to(self.device)
+        
+        img = cv2.resize(img, (self.im_height, self.im_width))
 
         img -= (104, 117, 123)
         img = img.transpose(2, 0, 1)
-        img = torch.from_numpy(img).unsqueeze(0)
-        img = img.to(self.device)
-        scale = scale.to(self.device)
-        loc, conf, landms = self.model(img)  # forward pass
 
-        priorbox = PriorBox(self.config, image_size=(im_height, im_width))
-        priors = priorbox.forward()
-        priors = priors.to(self.device)
-        prior_data = priors.data
-        boxes = decode(loc.data.squeeze(0), prior_data, self.config['variance'])
-        boxes = boxes * scale
+        img = torch.from_numpy(img).unsqueeze(0).to(self.device)
+        loc, conf, landms = self.model(img)  # forward pass
+   
+        boxes = decode(loc.data.squeeze(0), self.prior_data, self.config['variance'])
+        boxes = boxes * boxes_scale
         boxes = boxes.cpu().numpy()
         scores = conf.squeeze(0).data.cpu().numpy()[:, 1]
-        landms = decode_landm(landms.data.squeeze(0), prior_data, self.config['variance'])
-        scale = torch.Tensor([img.shape[3], img.shape[2], img.shape[3], img.shape[2],
-                               img.shape[3], img.shape[2], img.shape[3], img.shape[2],
-                               img.shape[3], img.shape[2]])
-                               
-        scale = scale.to(self.device)
-        landms = landms * scale
+        landms = decode_landm(landms.data.squeeze(0), self.prior_data, self.config['variance'])
+        
+        landms = landms * landms_scale
         landms = landms.cpu().numpy()
 
         # ignore low scores
@@ -109,7 +107,7 @@ class FaceDetector:
             bbox = dets[i, :]
             if bbox[4] > config.vis_threshold:
                 landmark = [[landms[i][2 * j], landms[i][2 * j + 1]] for j in range(5)]
-                warped_face = warp_and_crop_face(frame, landmark, reference, crop_size=(112, 112))
+                warped_face = warp_and_crop_face(frame, landmark, self.reference, crop_size=(112, 112))
                 
                 landmarks.append(landmark)
                 faces.append(warped_face)

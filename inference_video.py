@@ -8,7 +8,7 @@ import numpy as np
 from tqdm import tqdm
 
 import config
-from src.face_learner import FaceRecognizer
+from src.face_recognizer import FaceRecognizer
 from src.utils import *
 from retina_face_detector.face_detector import FaceDetector
 
@@ -21,8 +21,8 @@ parser.add_argument("--update", default=False, help="whether perform update the 
 parser.add_argument("--origin-size", default=False, type=str, help='Whether to use origin image size to evaluate')
 parser.add_argument("--fps", default=None, type=int, help='frame per second')
 parser.add_argument("--gpu", action="store_true", default=True, help='Use gpu inference')
-parser.add_argument("--detection-model", default='mobilenet', help='mobilenet | resnet50')
-parser.add_argument("--recognition-model", default='mobilenet', help='mobilenet | resnet50')
+parser.add_argument("--detection-model", default='resnet50', help='mobilenet | resnet50')
+parser.add_argument("--recognition-model", default='resnet50', help='mobilenet | resnet50')
 parser.add_argument("--tta", help="whether test time augmentation", default=False, action="store_true")
 parser.add_argument("--show_score", help="whether show the confidence score", default=True, action="store_true")
 parser.add_argument("--show", help="show live result", default=True, action="store_true")
@@ -95,8 +95,6 @@ class FaceIdentifier:
             if len(faces) != 0:
                 results, results_score = self.recognizer.recognize(faces, self.targets, self.tta)
                 for idx, bounding_box in enumerate(bounding_boxes):
-                    # cv2.imshow('s', faces[idx])
-                    # cv2.waitKey()
 
                     name = self.names[results[idx] + 1]
                     score = round(results_score[idx].item(), 2)

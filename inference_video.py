@@ -21,8 +21,8 @@ parser.add_argument("--update", default=False, help="whether perform update the 
 parser.add_argument("--origin-size", default=False, type=str, help='Whether to use origin image size to evaluate')
 parser.add_argument("--fps", default=None, type=int, help='frame per second')
 parser.add_argument("--gpu", action="store_true", default=True, help='Use gpu inference')
-parser.add_argument("--detection-model", default='resnet50', help='mobilenet | resnet50')
-parser.add_argument("--recognition-model", default='resnet50', help='mobilenet | resnet50')
+parser.add_argument("--detection-model", default='mobilenet', help='mobilenet | resnet50')
+parser.add_argument("--recognition-model", default='mobilenet', help='mobilenet | resnet50')
 parser.add_argument("--tta", help="whether test time augmentation", default=False, action="store_true")
 parser.add_argument("--show_score", help="whether show the confidence score", default=True, action="store_true")
 parser.add_argument("--show", help="show live result", default=True, action="store_true")
@@ -40,7 +40,7 @@ class FaceIdentifier:
 
         # face bank
         if update:
-            self.targets, self.names = prepare_face_bank(self.recognizer.model, self.device, tta=self.tta)
+            self.targets, self.names = prepare_face_bank(self.detector, self.recognizer, self.device, tta=self.tta)
             print('face bank updated')
         else:
             self.targets, self.names = load_face_bank()
@@ -98,10 +98,7 @@ class FaceIdentifier:
                     # cv2.imshow('s', faces[idx])
                     # cv2.waitKey()
 
-                    if results[idx] != -1:
-                        name = self.names[results[idx] + 1]
-                    else:
-                        name = 'Unknown'
+                    name = self.names[results[idx] + 1]
                     score = round(results_score[idx].item(), 2)
                     bounding_box = np.array(bounding_box, dtype="int")
                     frame = draw_box_name(frame, bounding_box, name, show_score, score)

@@ -4,9 +4,6 @@ import torch
 import numpy as np
 from tqdm import tqdm
 from src.utils import *
-from PIL import Image
-from torchvision import transforms as trans
-import math
 import config
 
 
@@ -32,24 +29,20 @@ class FaceRecognizer(object):
 #         self.writer.add_scalar('{}_val_std'.format(db_name), val_std, self.step)
 #         self.writer.add_scalar('{}_far:False Acceptance Ratio'.format(db_name), far, self.step)
     
+    def get_emb(self, image_face, tta=False):
+        emb = self.model(config.test_transform(image_face).to(self.device).unsqueeze(0))
+        if tta:
+            mirror = cv2.flip(image_face, 1)
+            emb_mirror = self.model(config.test_transform(mirror).to(self.device).unsqueeze(0))
+            emb = l2_norm(emb + emb_mirror)
+        return emb
+
     @timer
     def recognize(self, faces, target_embs, tta=False):
-        '''
-        faces : list of PIL Image
-        target_embs : [n, 512] computed embeddings of faces in dataset
-        names : recorded names of faces in dataset
-        tta : test time augmentation (hflip, that's all)
-        '''
         embs = []
         for face in faces:
-            # print(img.size)
-            if tta:
-                mirror = trans.functional.hflip(face)
-                emb = self.model(config.test_transform(face).to(self.device).unsqueeze(0))
-                emb_mirror = self.model(config.test_transform(mirror).to(self.device).unsqueeze(0))
-                embs.append(l2_norm(emb + emb_mirror))
-            else:
-                embs.append(self.model(config.test_transform(face).to(self.device).unsqueeze(0)))
+            emb = self.get_emb(face, tta)
+            embs.append(emb)
 
         source_embs = torch.cat(embs)
         diff = source_embs.unsqueeze(-1) - target_embs.transpose(1, 0).unsqueeze(0)

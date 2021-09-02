@@ -13,9 +13,6 @@ if __name__ == '__main__':
     if not os.path.exists(os.path.join(weights_path, 'recognition')):
         os.makedirs(os.path.join(weights_path, 'recognition'))
 
-    onet_url = "https://drive.google.com/uc?id=1OrUwgJtEwaVERuIs6UUG3ocvma2j4H59"
-    pnet_url = "https://drive.google.com/uc?id=1F6o_MYThHFSDu-DMRPgP66KRo4nbnA8f"
-    rnet_url = "https://drive.google.com/uc?id=1yyRsmDyu0bRHy2_PIFMGfC5ZB7850g_b"
     shape_predictor_68_face_landmarks_url = "https://drive.google.com/uc?id=1S2j4POfDolIGdJ1nt0Aco0VpKws_c6BD"
 
     # detection
@@ -27,15 +24,6 @@ if __name__ == '__main__':
     model_ir_se50_url = "https://drive.google.com/uc?id=1VK2HQnRt-od3Ko6nAKBS56f2HLCcGqI4"
 
     # download
-    output = os.path.join(weights_path, 'onet.npy')
-    gdown.download(onet_url, output, quiet=False)
-
-    output = os.path.join(weights_path, 'pnet.npy')
-    gdown.download(pnet_url, output, quiet=False)
-
-    output = os.path.join(weights_path, 'rnet.npy')
-    gdown.download(rnet_url, output, quiet=False)
-
     output = os.path.join(weights_path, 'shape_predictor_68_face_landmarks.dat')
     gdown.download(shape_predictor_68_face_landmarks_url, output, quiet=False)
 

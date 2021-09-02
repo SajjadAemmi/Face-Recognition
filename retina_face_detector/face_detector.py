@@ -10,7 +10,7 @@ from .models.retinaface import RetinaFace
 from .layers.functions.prior_box import PriorBox
 from .utils.box_utils import decode, decode_landm
 from .utils.nms.py_cpu_nms import py_cpu_nms
-from dataset_utils.mtcnn_pytorch.src.align_trans import get_reference_facial_points, warp_and_crop_face
+from .utils.align_trans import get_reference_facial_points, warp_and_crop_face
 import config
 from src.utils import *
 

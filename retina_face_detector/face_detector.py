@@ -64,7 +64,6 @@ class FaceDetector:
                                    img.shape[1], img.shape[0]]).to(self.device)
         
         img = cv2.resize(img, (self.im_height, self.im_width))
-
         img -= (104, 117, 123)
         img = img.transpose(2, 0, 1)
 
@@ -75,8 +74,8 @@ class FaceDetector:
         boxes = boxes * boxes_scale
         boxes = boxes.cpu().numpy()
         scores = conf.squeeze(0).data.cpu().numpy()[:, 1]
+
         landms = decode_landm(landms.data.squeeze(0), self.prior_data, self.config['variance'])
-        
         landms = landms * landms_scale
         landms = landms.cpu().numpy()
 

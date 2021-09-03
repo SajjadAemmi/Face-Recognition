@@ -9,3 +9,4 @@ face_bank
 .vs
 datasets/*
 *-checkpoint.ipynb
+.ipynb_checkpoints

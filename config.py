@@ -23,8 +23,6 @@ resnet50_recognition_weights_path = os.path.join(weights_dir_path, 'recognition'
 mobilenet_detection_weights_path = os.path.join(weights_dir_path, 'detection', 'mobilenet0.25_Final.pth')
 resnet50_detection_weights_path = os.path.join(weights_dir_path, 'detection', 'Resnet50_Final.pth')
 
-face_landmarks_path = os.path.join(weights_dir_path, "shape_predictor_68_face_landmarks.dat")
-
 confidence_threshold = 0.02
 top_k = 5000
 nms_threshold = 0.4

@@ -1,3 +1,7 @@
+import sys
+
+sys.path.insert(0, './retina_face_detector')
+
 import os
 import time
 import argparse
@@ -7,10 +11,9 @@ import torch
 import numpy as np
 from tqdm import tqdm
 
-import config
+from retina_face_detector.retina_face_detector import RetinaFaceDetector
 from src.face_recognizer import FaceRecognizer
 from src.utils import *
-from retina_face_detector.face_detector import FaceDetector
 
 
 parser = argparse.ArgumentParser(description='Face Recognition - ArcFace with RetinaFace')
@@ -34,7 +37,7 @@ class FaceIdentifier:
         self.tta = tta
 
         self.device = torch.device('cuda') if torch.cuda.is_available() and gpu else torch.device('cpu')
-        self.detector = FaceDetector(args.detection_model, self.device)
+        self.detector = RetinaFaceDetector(args.detection_model, self.device)
         self.recognizer = FaceRecognizer(args.recognition_model, self.device)
 
         # face bank

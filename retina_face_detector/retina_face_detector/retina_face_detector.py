@@ -1,6 +1,4 @@
 import cv2
-from PIL import Image
-from numpy.core.fromnumeric import size
 import torch
 import torch.backends.cudnn as cudnn
 import numpy as np
@@ -11,14 +9,12 @@ from .layers.functions.prior_box import PriorBox
 from .utils.box_utils import decode, decode_landm
 from .utils.nms.py_cpu_nms import py_cpu_nms
 from .utils.align_trans import get_reference_facial_points, warp_and_crop_face
-import config
-from src.utils import *
+from .utils.timer import timer
+from . import config
 
 
-class FaceDetector:
+class RetinaFaceDetector:
     def __init__(self, model_name, device):
-
-        self.top_k = 10
         self.device = device
         self.confidence_threshold = config.confidence_threshold
         self.nms_threshold = config.nms_threshold
@@ -53,11 +49,12 @@ class FaceDetector:
         self.prior_data = priors.data
 
         self.model = model
-        print('RetinaNet model loaded.')
+        print('RetinaFace loaded')
 
     @timer
     def detect(self, frame):
         img = np.float32(frame)
+
         boxes_scale = torch.Tensor([img.shape[1], img.shape[0], img.shape[1], img.shape[0]]).to(self.device)
         landms_scale = torch.Tensor([img.shape[1], img.shape[0], img.shape[1], img.shape[0],
                                    img.shape[1], img.shape[0], img.shape[1], img.shape[0],
@@ -87,7 +84,7 @@ class FaceDetector:
 
         # keep top-K before NMS
         order = scores.argsort()[::-1]
-        order = scores.argsort()[::-1][:self.top_k]
+        # order = scores.argsort()[::-1][:self.top_k]
         boxes = boxes[order]
         landms = landms[order]
         scores = scores[order]
@@ -116,8 +113,6 @@ class FaceDetector:
 
     @staticmethod
     def _remove_prefix(state_dict, prefix):
-        ''' Old style model is stored with all names of parameters sharing common prefix 'module.' '''
-        print('remove prefix \'{}\''.format(prefix))
         f = lambda x: x.split(prefix, 1)[-1] if x.startswith(prefix) else x
         return {f(key): value for key, value in state_dict.items()}
 
@@ -126,10 +121,5 @@ class FaceDetector:
         ckpt_keys = set(pretrained_state_dict.keys())
         model_keys = set(model.state_dict().keys())
         used_pretrained_keys = model_keys & ckpt_keys
-        unused_pretrained_keys = ckpt_keys - model_keys
-        missing_keys = model_keys - ckpt_keys
-        print('Missing keys:{}'.format(len(missing_keys)))
-        print('Unused checkpoint keys:{}'.format(len(unused_pretrained_keys)))
-        print('Used keys:{}'.format(len(used_pretrained_keys)))
         assert len(used_pretrained_keys) > 0, 'load NONE from pretrained checkpoint'
         return True

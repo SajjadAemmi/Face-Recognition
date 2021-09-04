@@ -1,3 +1,7 @@
+import sys
+
+sys.path.insert(0, './retina_face_detector')
+
 import os
 import time
 import argparse
@@ -7,10 +11,9 @@ import torch
 import numpy as np
 from tqdm import tqdm
 
-import config
+from retina_face_detector.retina_face_detector import RetinaFaceDetector
 from src.face_recognizer import FaceRecognizer
 from src.utils import *
-from retina_face_detector.face_detector import FaceDetector
 
 
 parser = argparse.ArgumentParser(description='Face Recognition - ArcFace with RetinaFace')
@@ -21,8 +24,8 @@ parser.add_argument("--update", default=False, help="whether perform update the 
 parser.add_argument("--origin-size", default=False, type=str, help='Whether to use origin image size to evaluate')
 parser.add_argument("--fps", default=None, type=int, help='frame per second')
 parser.add_argument("--gpu", action="store_true", default=True, help='Use gpu inference')
-parser.add_argument("--detection-model", default='resnet50', help='mobilenet | resnet50')
-parser.add_argument("--recognition-model", default='resnet50', help='mobilenet | resnet50')
+parser.add_argument("--detection-model", default='mobilenet', help='mobilenet | resnet50')
+parser.add_argument("--recognition-model", default='mobilenet', help='mobilenet | resnet50')
 parser.add_argument("--tta", help="whether test time augmentation", default=False, action="store_true")
 parser.add_argument("--show_score", help="whether show the confidence score", default=True, action="store_true")
 parser.add_argument("--show", help="show live result", default=True, action="store_true")
@@ -35,7 +38,7 @@ class FaceIdentifier:
         self.tta = tta
 
         self.device = torch.device('cuda') if torch.cuda.is_available() and gpu else torch.device('cpu')
-        self.detector = FaceDetector(args.detection_model, self.device)
+        self.detector = RetinaFaceDetector(args.detection_model, self.device)
         self.recognizer = FaceRecognizer(args.recognition_model, self.device)
 
         # face bank

@@ -1,6 +1,17 @@
 import torch
 import numpy as np
 from PIL import Image
+import cv2
+
+
+def draw_box(image, bbox, show_score=False, score=None):
+    bbox = np.array(bbox, dtype=int)
+    x1, y1, x2, y2, _ = bbox
+    image = cv2.rectangle(image, (x1, y1), (x2, y2), (255, 0, 0), 1)
+    if show_score:
+        image = cv2.putText(image, str(score), (bbox[0], bbox[3]), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 0), 1, cv2.LINE_AA)
+    
+    return image
 
 
 def point_form(boxes):

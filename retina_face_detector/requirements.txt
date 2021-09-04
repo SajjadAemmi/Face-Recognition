@@ -1,0 +1,15 @@
+torch
+opencv-python
+torchvision
+gdown
+matplotlib
+numpy
+scipy
+tqdm
+Pillow
+PyInstaller
+scikit_learn
+tensorboardX
+grad-cam
+ttach
+colorama

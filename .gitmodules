@@ -1,0 +1,3 @@
+[submodule "retina_face_detector"]
+	path = retina_face_detector
+	url = https://github.com/SajjadAemmi/Retina_Face_Detector

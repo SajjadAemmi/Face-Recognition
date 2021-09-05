@@ -1,6 +1,6 @@
 import sys
 
-sys.path.insert(0, './retina_face_detector')
+sys.path.insert(0, './Retina_Face_Detector')
 
 import os
 import time
@@ -11,7 +11,7 @@ import torch
 import numpy as np
 from tqdm import tqdm
 
-from retina_face_detector.retina_face_detector import RetinaFaceDetector
+from Retina_Face_Detector.retina_face_detector import RetinaFaceDetector
 from src.face_recognizer import FaceRecognizer
 from src.utils import *
 

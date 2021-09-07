@@ -4,15 +4,17 @@ import functools
 import time
 from datetime import datetime
 
-from PIL import Image
 import numpy as np
-from torchvision import transforms as trans
-from retina_face_detector.data.data_pipe import de_preprocess
+from torchvision import transforms
 import torch
 import matplotlib.pyplot as plt
 import cv2
 
 import config
+
+
+def de_preprocess(tensor):
+    return tensor * 0.5 + 0.5
 
 
 def timer(func):
@@ -89,12 +91,12 @@ def load_face_bank():
     return embeddings, names
 
 
-hflip = trans.Compose([
+hflip = transforms.Compose([
             de_preprocess,
-            trans.ToPILImage(),
-            trans.functional.hflip,
-            trans.ToTensor(),
-            trans.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
+            transforms.ToPILImage(),
+            transforms.functional.hflip,
+            transforms.ToTensor(),
+            transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
         ])
 
 

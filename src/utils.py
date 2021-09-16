@@ -4,17 +4,17 @@ import functools
 import time
 from datetime import datetime
 
-from PIL import Image
 import numpy as np
-from torchvision import transforms as trans
-from retina_face_detector.data.data_pipe import de_preprocess
+from torchvision import transforms
 import torch
 import matplotlib.pyplot as plt
 import cv2
 
-from src.mtcnn import MTCNN
 import config
-from src.model import l2_norm
+
+
+def de_preprocess(tensor):
+    return tensor * 0.5 + 0.5
 
 
 def timer(func):
@@ -48,40 +48,36 @@ def separate_bn_paras(modules):
     return paras_only_bn, paras_wo_bn
 
 
-def prepare_face_bank(model, device, tta=True):
-    mtcnn = MTCNN(device)
-    model.eval()
+def prepare_face_bank(detector, recognizer, device, tta=True):
     embeddings = []
     names = ['Unknown']
     for path in config.face_bank_path.iterdir():
-        if path.is_file():
-            continue
-        else:
+        if path.is_dir():
+            print(path)  
             embs = []
             for file in path.iterdir():
-                if not file.is_file():
-                    continue
-                else:
+                if file.is_file():
                     try:
-                        img = Image.open(file)
+                        image = cv2.imread(str(file))
+                        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                         print(file)
-                    except:
+                    except Exception as e:
+                        print(e)
                         continue
-                    if img.size != (112, 112):
-                        img = mtcnn.align(img)
-                    with torch.no_grad():
-                        if tta:
-                            mirror = trans.functional.hflip(img)
-                            emb = model(config.test_transform(img).to(device).unsqueeze(0))
-                            emb_mirror = model(config.test_transform(mirror).to(device).unsqueeze(0))
-                            embs.append(l2_norm(emb + emb_mirror))
-                        else:                        
-                            embs.append(model(config.test_transform(img).to(device).unsqueeze(0)))
-        if len(embs) == 0:
-            continue
-        embedding = torch.cat(embs).mean(0,keepdim=True)
-        embeddings.append(embedding)
-        names.append(path.name)
+
+                    bounding_boxes, faces, landmarks = detector.detect(image)
+                    image_face = faces[0]
+            
+                    emb = recognizer.get_emb(image_face, tta=True)
+                    embs.append(emb)
+            
+            if len(embs) == 0:
+                continue
+            
+            embedding = torch.cat(embs).mean(0, keepdim=True)
+            embeddings.append(embedding)
+            names.append(path.name)
+    
     embeddings = torch.cat(embeddings)
     names = np.array(names)
     torch.save(embeddings, os.path.join(config.face_bank_path, 'face_bank.pth'))
@@ -95,12 +91,12 @@ def load_face_bank():
     return embeddings, names
 
 
-hflip = trans.Compose([
+hflip = transforms.Compose([
             de_preprocess,
-            trans.ToPILImage(),
-            trans.functional.hflip,
-            trans.ToTensor(),
-            trans.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
+            transforms.ToPILImage(),
+            transforms.functional.hflip,
+            transforms.ToTensor(),
+            transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
         ])
 
 

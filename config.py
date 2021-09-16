@@ -17,13 +17,9 @@ val = False
 
 weights_dir_path = './weights'
 
-mobilenet_recognition_weights_path = os.path.join(weights_dir_path, 'recognition', 'model_mobilefacenet.pth')
-resnet50_recognition_weights_path = os.path.join(weights_dir_path, 'recognition', 'model_ir_se50.pth')
+mobilenet_recognition_weights_path = os.path.join(weights_dir_path, 'model_mobilefacenet.pth')
+resnet50_recognition_weights_path = os.path.join(weights_dir_path, 'model_ir_se50.pth')
 
-mobilenet_detection_weights_path = os.path.join(weights_dir_path, 'detection', 'mobilenet0.25_Final.pth')
-resnet50_detection_weights_path = os.path.join(weights_dir_path, 'detection', 'Resnet50_Final.pth')
-
-face_landmarks_path = os.path.join(weights_dir_path, "shape_predictor_68_face_landmarks.dat")
 
 confidence_threshold = 0.02
 top_k = 5000
@@ -54,7 +50,6 @@ pin_memory = True
 
 # Inference Config
 face_bank_path = Path('./face_bank')
-face_limit = 10
-# when inference, at maximum detect 10 faces in one image, my laptop is slow
-min_face_size = 20
+
 # the larger this value, the faster deduction, comes with tradeoff in small faces
+min_face_size = 20

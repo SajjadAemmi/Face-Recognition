@@ -42,7 +42,7 @@ class FaceIdentifier:
 
         # face bank
         if update:
-            self.targets, self.names = prepare_face_bank(self.recognizer.model, self.device, tta=self.tta)
+            self.targets, self.names = prepare_face_bank(self.detector, self.recognizer, self.device, tta=self.tta)
             print('face bank updated')
         else:
             self.targets, self.names = load_face_bank()

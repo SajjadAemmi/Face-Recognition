@@ -61,15 +61,16 @@ def prepare_face_bank(detector, recognizer, device, tta=True):
                         image = cv2.imread(str(file))
                         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                         print(file)
+                    
+                        bounding_boxes, faces, landmarks = detector.detect(image)
+                        image_face = faces[0]
+                
+                        emb = recognizer.get_emb(image_face, tta=True)
+                        embs.append(emb)
+                        
                     except Exception as e:
                         print(e)
                         continue
-
-                    bounding_boxes, faces, landmarks = detector.detect(image)
-                    image_face = faces[0]
-            
-                    emb = recognizer.get_emb(image_face, tta=True)
-                    embs.append(emb)
             
             if len(embs) == 0:
                 continue

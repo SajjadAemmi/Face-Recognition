@@ -1,7 +1,7 @@
 .DS_Store
 __pycache__
 .vscode
-input/*.mp4
+input/video
 output/
 weights
 face_bank

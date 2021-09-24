@@ -1,7 +1,3 @@
-import sys
-
-sys.path.insert(0, './Retina_Face_Detector')
-
 import os
 import time
 import argparse
@@ -11,7 +7,7 @@ import torch
 import numpy as np
 from tqdm import tqdm
 
-from Retina_Face_Detector.retina_face_detector import RetinaFaceDetector
+from retina_face_detector import RetinaFaceDetector
 from src.face_recognizer import FaceRecognizer
 from src.utils import *
 
@@ -21,11 +17,11 @@ parser.add_argument("--input", default="rtsp://192.168.1.2:8560/video_stream", h
 parser.add_argument("--output", default="output", help="output dir path", type=str)
 parser.add_argument("--save", default=False, help="whether to save", action="store_true")
 parser.add_argument("--update", default=False, help="whether perform update the dataset", action="store_true")
-parser.add_argument("--origin-size", default=False, type=str, help='Whether to use origin image size to evaluate')
+parser.add_argument("--origin-size", default=True, type=str, help='Whether to use origin image size to evaluate')
 parser.add_argument("--fps", default=None, type=int, help='frame per second')
 parser.add_argument("--gpu", action="store_true", default=True, help='Use gpu inference')
-parser.add_argument("--detection-model", default='mobilenet', help='mobilenet | resnet50')
-parser.add_argument("--recognition-model", default='mobilenet', help='mobilenet | resnet50')
+parser.add_argument("--detection-model", default='resnet50', help='mobilenet | resnet50')
+parser.add_argument("--recognition-model", default='resnet50', help='mobilenet | resnet50')
 parser.add_argument("--tta", help="whether test time augmentation", default=False, action="store_true")
 parser.add_argument("--show_score", help="whether show the confidence score", default=True, action="store_true")
 parser.add_argument("--show", help="show live result", default=True, action="store_true")
@@ -95,18 +91,18 @@ class FaceIdentifier:
        
             bounding_boxes, faces, landmarks = self.detector.detect(frame_rgb)
 
-            if len(faces) != 0:
-                results, results_score = self.recognizer.recognize(faces, self.targets, self.tta)
-                for idx, bounding_box in enumerate(bounding_boxes):
+            # if len(faces) != 0:
+            #     results, results_score = self.recognizer.recognize(faces, self.targets, self.tta)
+            #     for idx, bounding_box in enumerate(bounding_boxes):
 
-                    name = self.names[results[idx] + 1]
-                    score = round(results_score[idx].item(), 2)
-                    bounding_box = np.array(bounding_box, dtype="int")
-                    frame = draw_box_name(frame, bounding_box, name, show_score, score)
+            #         name = self.names[results[idx] + 1]
+            #         score = round(results_score[idx].item(), 2)
+            #         bounding_box = np.array(bounding_box, dtype="int")
+            #         frame = draw_box_name(frame, bounding_box, name, show_score, score)
 
-            toc = time.time()
-            real_fps = round(1 / (toc - tic), 4)
-            frame = cv2.putText(frame, f"fps: {real_fps}", (10, 20), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 0), 1, cv2.LINE_AA)
+            # toc = time.time()
+            # real_fps = round(1 / (toc - tic), 4)
+            # frame = cv2.putText(frame, f"fps: {real_fps}", (10, 20), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 0), 1, cv2.LINE_AA)
 
             if show:
                 cv2.imshow('face Capture', frame)

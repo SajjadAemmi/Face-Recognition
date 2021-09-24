@@ -61,8 +61,13 @@ python predict.py --input /path/to/image.jpg
 Put your input images or videos in ./input directory. The output will be saved in ./output. 
 In root directory of project, run the following command: 
 ```
-python main.py --input "./input/sample.mp4" -u
+python inference_video.py --input "./input/sample.mp4" -u
 ```
+or
+```
+python inference_image.py --input "./input/sajjad.jpg" -u
+```
+
 Use -sh for representation of results during code running or not
 
 Note that you can pass some other arguments. Take a look at *main.py* file.

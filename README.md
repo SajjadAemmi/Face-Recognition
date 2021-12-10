@@ -13,8 +13,7 @@ This module can get a number of names as input for tracking the specific face.
 
 Attempt | Parameters | Madds | Top1-acc
 --- | --- | --- | --- |
-MobileNetV3-Large |  |  |  | 
-SA-MobileNetV3-Large |  |  |  |
+Mobile Face Net |  |  |  |
 SA-MobileNetV3-Large with modified ArcFace loss |  |  |  |
 
 

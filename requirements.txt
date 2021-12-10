@@ -7,9 +7,13 @@ numpy
 scipy
 tqdm
 Pillow
-PyInstaller
 scikit_learn
 tensorboardX
 grad-cam
 ttach
 colorama
+tensorboard
+easydict
+mxnet
+onnx
+sklearn

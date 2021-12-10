@@ -15,7 +15,7 @@ from src.utils import *
 parser = argparse.ArgumentParser(description='Face Recognition - ArcFace with RetinaFace')
 parser.add_argument("--input", default="rtsp://192.168.1.2:8560/video_stream", help="input image or video path", type=str)
 parser.add_argument("--output", default="output", help="output dir path", type=str)
-parser.add_argument("--save", default=False, help="whether to save", action="store_true")
+parser.add_argument("--save", default=True, help="whether to save", action="store_true")
 parser.add_argument("--update", default=False, help="whether perform update the dataset", action="store_true")
 parser.add_argument("--origin-size", default=True, type=str, help='Whether to use origin image size to evaluate')
 parser.add_argument("--fps", default=None, type=int, help='frame per second')
@@ -23,8 +23,7 @@ parser.add_argument("--gpu", action="store_true", default=True, help='Use gpu in
 parser.add_argument("--detection-model", default='resnet50', help='mobilenet | resnet50')
 parser.add_argument("--recognition-model", default='resnet50', help='mobilenet | resnet50')
 parser.add_argument("--tta", help="whether test time augmentation", default=False, action="store_true")
-parser.add_argument("--show_score", help="whether show the confidence score", default=True, action="store_true")
-parser.add_argument("--show", help="show live result", default=True, action="store_true")
+parser.add_argument("--show", help="show live result", default=False, action="store_true")
 args = parser.parse_args()
 
 
@@ -39,7 +38,7 @@ class FaceIdentifier:
 
         # face bank
         if update:
-            self.targets, self.names = prepare_face_bank(self.detector, self.recognizer, self.device, tta=self.tta)
+            self.targets, self.names = prepare_face_bank(self.detector, self.recognizer, tta=self.tta)
             print('face bank updated')
         else:
             self.targets, self.names = load_face_bank()
@@ -47,7 +46,7 @@ class FaceIdentifier:
         self.targets = self.targets.to(self.device)
        
     @timer
-    def __call__(self, input, output, save, show, show_score, fps):
+    def __call__(self, input, output, save, show, fps):
         file_name, file_ext = os.path.splitext(os.path.basename(input))
         output_file_path = os.path.join(output, file_name + file_ext)
         
@@ -91,18 +90,19 @@ class FaceIdentifier:
        
             bounding_boxes, faces, landmarks = self.detector.detect(frame_rgb)
 
-            # if len(faces) != 0:
-            #     results, results_score = self.recognizer.recognize(faces, self.targets, self.tta)
-            #     for idx, bounding_box in enumerate(bounding_boxes):
+            if len(faces) != 0:
+                results = self.recognizer.recognize(faces, self.targets, self.tta)
+                for idx, bounding_box in enumerate(bounding_boxes):
+                    if results[idx] != -1:
+                        name = self.names[results[idx] + 1]
+                    else:
+                        name = 'Unknown'
+                    bounding_box = np.array(bounding_box, dtype="int")
+                    frame = draw_box_name(frame, bounding_box, name)
 
-            #         name = self.names[results[idx] + 1]
-            #         score = round(results_score[idx].item(), 2)
-            #         bounding_box = np.array(bounding_box, dtype="int")
-            #         frame = draw_box_name(frame, bounding_box, name, show_score, score)
-
-            # toc = time.time()
-            # real_fps = round(1 / (toc - tic), 4)
-            # frame = cv2.putText(frame, f"fps: {real_fps}", (10, 20), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 0), 1, cv2.LINE_AA)
+            toc = time.time()
+            real_fps = round(1 / (toc - tic), 4)
+            frame = cv2.putText(frame, f"fps: {real_fps}", (10, 20), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 0), 1, cv2.LINE_AA)
 
             if show:
                 cv2.imshow('face Capture', frame)
@@ -122,4 +122,4 @@ class FaceIdentifier:
 
 if __name__ == '__main__':
     face_identifier = FaceIdentifier(gpu=args.gpu, origin_size=args.origin_size, update=args.update, tta=args.tta)
-    face_identifier(input=args.input, output=args.output, save=args.save, show_score=args.show_score, show=args.show, fps=args.fps)
+    face_identifier(input=args.input, output=args.output, save=args.save, show=args.show, fps=args.fps)

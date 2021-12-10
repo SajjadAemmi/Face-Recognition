@@ -1,13 +1,9 @@
-import io
 import os
 import functools
 import time
-from datetime import datetime
 
 import numpy as np
-from torchvision import transforms
 import torch
-import matplotlib.pyplot as plt
 import cv2
 
 import config
@@ -48,7 +44,7 @@ def separate_bn_paras(modules):
     return paras_only_bn, paras_wo_bn
 
 
-def prepare_face_bank(detector, recognizer, device, tta=True):
+def prepare_face_bank(detector, recognizer, tta=True):
     embeddings = []
     names = ['Unknown']
     for path in config.face_bank_path.iterdir():
@@ -65,7 +61,7 @@ def prepare_face_bank(detector, recognizer, device, tta=True):
                         bounding_boxes, faces, landmarks = detector.detect(image)
                         image_face = faces[0]
                 
-                        emb = recognizer.get_emb(image_face, tta=True)
+                        emb = recognizer.get_emb(image_face, tta=tta)
                         embs.append(emb)
                         
                     except Exception as e:
@@ -92,44 +88,7 @@ def load_face_bank():
     return embeddings, names
 
 
-hflip = transforms.Compose([
-            de_preprocess,
-            transforms.ToPILImage(),
-            transforms.functional.hflip,
-            transforms.ToTensor(),
-            transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
-        ])
-
-
-def hflip_batch(imgs_tensor):
-    hfliped_imgs = torch.empty_like(imgs_tensor)
-    for i, img_ten in enumerate(imgs_tensor):
-        hfliped_imgs[i] = hflip(img_ten)
-    return hfliped_imgs
-
-
-def get_time():
-    return (str(datetime.now())[:-10]).replace(' ', '-').replace(':', '-')
-
-
-def gen_plot(fpr, tpr):
-    """Create a pyplot plot and save to buffer."""
-    plt.figure()
-    plt.xlabel("FPR", fontsize=14)
-    plt.ylabel("TPR", fontsize=14)
-    plt.title("ROC Curve", fontsize=14)
-    plot = plt.plot(fpr, tpr, linewidth=2)
-    buf = io.BytesIO()
-    plt.savefig(buf, format='jpeg')
-    buf.seek(0)
-    plt.close()
-    return buf
-
-
-def draw_box_name(image, bbox, name, show_score=False, score=None):
+def draw_box_name(image, bbox, name):
     image = cv2.rectangle(image, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (255, 0, 0), 1)
-    image = cv2.putText(image, name, (bbox[0], bbox[1]), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 0), 1, cv2.LINE_AA)
-    if show_score:
-        image = cv2.putText(image, str(score), (bbox[0], bbox[3]), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 0), 1, cv2.LINE_AA)
-    
+    image = cv2.putText(image, name, (bbox[0], bbox[1]), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 0), 1, cv2.LINE_AA)    
     return image

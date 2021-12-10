@@ -1,75 +1,35 @@
-import time
 import argparse
 
 import cv2
+import numpy as np
 import torch
-import torch.nn.functional as F
-from torchvision import transforms
-from pytorch_grad_cam import GradCAM
-from pytorch_grad_cam.utils.image import show_cam_on_image
-from colorama import Fore
 
-from models import mobilenet_v3_large, Classifier
-import config
+from backbones import get_model
 
 
-def inference():
-    parser = argparse.ArgumentParser(description='SA-MobileNetV3 - Predict')
-    parser.add_argument('--input', help="input image", default='input/4.png', type=str)
-    parser.add_argument('--output', help="output image", default='output/4.png', type=str)
-    parser.add_argument('--dataset', help="dataset", default='mnist', type=str)
-    parser.add_argument('--gpu', help="gpu", default=False, action='store_true')
-    parser.add_argument('--backbone-weights', help="pre trained weights path", default='./weights/backbone.pt', type=str)
-    parser.add_argument('--head-weights', help="pre trained weights path", default='./weights/head.pt', type=str)
-    parser.add_argument('--use-gradcam', help="gpu", default=True, action='store_true')
-    args = parser.parse_args()
+@torch.no_grad()
+def inference(weight, name, image_path):
+    if image_path is None:
+        img = np.random.randint(0, 255, size=(112, 112, 3), dtype=np.uint8)
+    else:
+        img = cv2.imread(image_path)
+        img = cv2.resize(img, (112, 112))
 
-    if args.dataset == 'mnist':
-        num_classes = 10
-    elif args.dataset == 'cfar100':
-        num_classes = 100
-
-    device = torch.device('cuda') if torch.cuda.is_available() and args.gpu else torch.device('cpu')
-    model = mobilenet_v3_large(embedding_size=config.embedding_size, num_classes=num_classes).to(device)
-    model.load_state_dict(torch.load(args.backbone_weights, map_location=device), strict=False)
-    model.eval()
-    head = Classifier(embedding_size=config.embedding_size, num_classes=num_classes).to(device)
-    head.load_state_dict(torch.load(args.head_weights, map_location=device), strict=False)
-    head.eval()
-
-    tic = time.time()
-
-    transform = transforms.Compose([transforms.ToTensor(),
-                                    transforms.Resize((config.input_size, config.input_size))
-                                    #  transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                    #                       std=[0.229, 0.224, 0.225]),
-                                    ])
-    
-    image = cv2.imread(args.input)
-    image_tensor = transform(image).unsqueeze(0).to(device)
-
-    embedding = model(image_tensor)
-    preds = head(embedding)
-    output = F.softmax(preds, dim=1)
-    print(Fore.GREEN, torch.argmax(output), Fore.RESET)
-
-    if args.use_gradcam:
-        target_layer = model.features[-1]
-        cam = GradCAM(model=model, target_layer=target_layer, use_cuda=args.gpu)
-
-        input_tensor = image_tensor.float()
-        grayscale_cam = cam(input_tensor=input_tensor, target_category=None, aug_smooth=True)
-        grayscale_cam = grayscale_cam[0]
-
-        image = cv2.resize(image, (224, 224))
-        image_normal = image / 255.0
-
-        visualization = show_cam_on_image(image_normal, grayscale_cam)
-        cv2.imwrite(args.output, visualization)
-
-    tac = time.time()
-    print("Time Taken : ", tac - tic)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = np.transpose(img, (2, 0, 1))
+    img = torch.from_numpy(img).unsqueeze(0).float()
+    img.div_(255).sub_(0.5).div_(0.5)
+    net = get_model(name, fp16=False)
+    net.load_state_dict(torch.load(weight))
+    net.eval()
+    feat = net(img).numpy()
+    print(feat)
 
 
 if __name__ == "__main__":
-    inference()
+    parser = argparse.ArgumentParser(description='PyTorch ArcFace Predict')
+    parser.add_argument('--network', type=str, default='mbf', help='backbone network: for example: r50 | mbf | samnv3')
+    parser.add_argument('--weight', type=str, default='weights/emore_mobilefacenet.pth')
+    parser.add_argument('--input', type=str, default=None, help='aligned face image path')
+    args = parser.parse_args()
+    inference(args.weight, args.network, args.input)

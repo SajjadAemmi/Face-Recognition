@@ -17,7 +17,7 @@ from src.face_recognizer import FaceRecognizer
 from src.utils import *
 
 
-parser = argparse.ArgumentParser(description='Face Recognition - ArcFace with RetinaFace')
+parser = argparse.ArgumentParser(description='Face Recognition - ArcFace with SCRFD')
 parser.add_argument("--input", default="IO/input/IMG_5127.JPG", help="input image path", type=str)
 parser.add_argument("--output", default="IO/output", help="output dir path", type=str)
 parser.add_argument("--save", default=True, help="whether to save", action="store_true")

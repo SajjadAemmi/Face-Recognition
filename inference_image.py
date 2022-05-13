@@ -69,7 +69,7 @@ class FaceIdentifier:
         ta = time.time()
         bboxes, kpss = self.detector.detect(image_rgb, 0.5, input_size = (640, 640))
         tb = time.time()
-        print('all cost:', tb-ta)
+        print('detection time:', tb-ta)
 
         faces = []
         for kps in kpss:

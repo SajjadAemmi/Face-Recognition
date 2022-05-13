@@ -7,7 +7,8 @@ import torch
 import numpy as np
 from tqdm import tqdm
 
-from retina_face_detector import RetinaFaceDetector
+from scrfd.tools.scrfd import SCRFD
+from scrfd.tools.align_trans import warp_and_crop_face
 from src.face_recognizer import FaceRecognizer
 from src.utils import *
 
@@ -33,7 +34,7 @@ class FaceIdentifier:
         self.tta = tta
 
         self.device = torch.device('cuda') if torch.cuda.is_available() and gpu else torch.device('cpu')
-        self.detector = RetinaFaceDetector(args.detection_model, self.device)
+        self.detector = SCRFD(model_file='./scrfd/onnx/scrfd_10g_bnkps.onnx')
         self.recognizer = FaceRecognizer(args.recognition_model, self.device)
 
         # face bank
@@ -88,17 +89,25 @@ class FaceIdentifier:
             
             print("processing frame {} ...".format(frame_count))
        
-            bounding_boxes, faces, landmarks = self.detector.detect(frame_rgb)
+            ta = time.time()
+            bboxes, kpss = self.detector.detect(frame_rgb, 0.5, input_size = (640, 640))
+            tb = time.time()
+            print('detection time:', tb-ta)
+
+            faces = []
+            for kps in kpss:
+                face_image_aligned = warp_and_crop_face(frame_rgb, kps)
+                faces.append(face_image_aligned)
 
             if len(faces) != 0:
                 results = self.recognizer.recognize(faces, self.targets, self.tta)
-                for idx, bounding_box in enumerate(bounding_boxes):
+                for idx, bbox in enumerate(bboxes):
                     if results[idx] != -1:
                         name = self.names[results[idx] + 1]
                     else:
                         name = 'Unknown'
-                    bounding_box = np.array(bounding_box, dtype="int")
-                    frame = draw_box_name(frame, bounding_box, name)
+                    bbox = np.array(bbox, dtype="int")
+                    frame = draw_box_name(frame, bbox, name)
 
             toc = time.time()
             real_fps = round(1 / (toc - tic), 4)

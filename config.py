@@ -27,7 +27,7 @@ top_k = 5000
 nms_threshold = 0.4
 keep_top_k = 750
 vis_threshold = 0.6
-recognition_threshold = 0.4
+recognition_threshold = 0.5
 
 data_path = Path(os.path.join('retina_face', 'data'))
 

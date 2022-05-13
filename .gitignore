@@ -2,8 +2,8 @@
 */__pycache__
 __pycache__
 .vscode
-input/video
-output/
+IO/input/video
+IO/output/
 face_bank
 .idea
 .vs
@@ -12,6 +12,7 @@ datasets/*
 .ipynb_checkpoints
 wandb
 work_dirs
+scrfd/weights
 
 weights/glint360k_cosface_r18_fp16_0.1.pth
 weights/ms1mv3_arcface_r18_fp16.pth

@@ -13,7 +13,7 @@ from src.utils import *
 
 
 parser = argparse.ArgumentParser(description='Face Recognition - ArcFace with RetinaFace')
-parser.add_argument("--input", default="rtsp://192.168.1.2:8560/video_stream", help="input image or video path", type=str)
+parser.add_argument("--input", default="0", help="input image or video path", type=str)
 parser.add_argument("--output", default="output", help="output dir path", type=str)
 parser.add_argument("--save", default=True, help="whether to save", action="store_true")
 parser.add_argument("--update", default=False, help="whether perform update the dataset", action="store_true")
@@ -23,7 +23,7 @@ parser.add_argument("--gpu", action="store_true", default=True, help='Use gpu in
 parser.add_argument("--detection-model", default='resnet50', help='mobilenet | resnet50')
 parser.add_argument("--recognition-model", default='resnet50', help='mobilenet | resnet50')
 parser.add_argument("--tta", help="whether test time augmentation", default=False, action="store_true")
-parser.add_argument("--show", help="show live result", default=False, action="store_true")
+parser.add_argument("--show", help="show live result", default=True, action="store_true")
 args = parser.parse_args()
 
 

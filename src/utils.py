@@ -6,6 +6,7 @@ import numpy as np
 import torch
 import cv2
 
+from scrfd.tools.align_trans import warp_and_crop_face
 import config
 
 
@@ -55,13 +56,15 @@ def prepare_face_bank(detector, recognizer, tta=True):
                 if file.is_file():
                     try:
                         image = cv2.imread(str(file))
-                        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                         print(file)
                     
-                        bounding_boxes, faces, landmarks = detector.detect(image)
-                        image_face = faces[0]
+                        bboxes, kpss = detector.detect(image_rgb, 0.5, input_size=(640, 640))
+                        for kps in kpss:
+                            face_image_aligned = warp_and_crop_face(image_rgb, kps)
+                            break
                 
-                        emb = recognizer.get_emb(image_face, tta=tta)
+                        emb = recognizer.get_emb(face_image_aligned, tta=tta)
                         embs.append(emb)
                         
                     except Exception as e:
@@ -88,7 +91,12 @@ def load_face_bank():
     return embeddings, names
 
 
-def draw_box_name(image, bbox, name):
+def draw_box_name(image, bbox, name, kps=None):
     image = cv2.rectangle(image, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (255, 0, 0), 1)
-    image = cv2.putText(image, name, (bbox[0], bbox[1]), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 0), 1, cv2.LINE_AA)    
+    image = cv2.putText(image, name, (bbox[0], bbox[1]), cv2.FONT_HERSHEY_PLAIN, 1, (0, 255, 0), 1, cv2.LINE_AA)
+    if kps is not None:
+        for kp in kps:
+            kp = kp.astype(int)
+            cv2.circle(image, tuple(kp) , 1, (0,0,255) , 2)
+
     return image

@@ -7,13 +7,12 @@ numpy
 scipy
 tqdm
 Pillow
-scikit_learn
-tensorboardX
+scikit-learn
 grad-cam
-ttach
 colorama
-tensorboard
 easydict
 mxnet
 onnx
-sklearn
+onnx-simplifier
+onnxruntime
+terminaltables

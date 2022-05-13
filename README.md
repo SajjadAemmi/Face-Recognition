@@ -29,7 +29,18 @@ pip install -r requirements.txt
 ```
 python download_weights.py
 ```
+4- Downlaod SCRFD pretrained-models from [here](https://github.com/deepinsight/insightface/tree/master/detection/scrfd#pretrained-models)
 
+## Docker
+
+1- Build docker image
+```
+docker build -t face_recognition .
+```
+2- Run docker container
+```
+docker run --gpus all -it --rm -v $(pwd):/workspace/face-recognition -it face_recognition bash
+```
 
 ## Dataset
 
@@ -49,7 +60,6 @@ Train on multi GPUs:
 python -m torch.distributed.launch --nproc_per_node=4 --nnodes=1 --node_rank=0 train.py configs/webface_samnv3
 ```
 other configs are available in `./configs`
-
 
 
 ## Test
@@ -78,11 +88,11 @@ python inference_compare.py --input1 input/sajjad_0.jpg --input2 input/sajjad_1.
 Put your input images or videos in ./input directory. The output will be saved in ./output. 
 In root directory of project, run the following command: 
 ```
-python inference_video.py --input "./input/sample.mp4" --update
+python inference_video.py --input "./IO/input/sample.mp4" --update
 ```
 or
 ```
-python inference_image.py --input "./input/sajjad.jpg" --update
+python inference_image.py --input "./IO/input/sajjad.jpg" --update
 ```
 
 Use -sh for representation of results during code running or not

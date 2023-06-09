@@ -1,19 +1,23 @@
+import os
 import argparse
 import cv2
 from insightface.app import FaceAnalysis
-from insightface.data import get_image as ins_get_image
 
 
 parser = argparse.ArgumentParser(description='Face Detection - ArcFace with SCRFD')
-parser.add_argument("--input", default="input/sajjad2.jpg", type=str, help="input image 1 path")
+parser.add_argument("--input", default="io/input/sajjad2.jpg", type=str, help="input image 1 path")
+parser.add_argument("--output", default="io/output", type=str, help="output dir path")
 args = parser.parse_args()
 
+if __name__ == '__main__':
+    app = FaceAnalysis(providers=["CUDAExecutionProvider", "CPUExecutionProvider"])
+    app.prepare(ctx_id=0, det_size=(640, 640))
+    image = cv2.imread(args.input)
+    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    faces = app.get(image_rgb)
+    for face in faces:
+        print(face)
 
-app = FaceAnalysis(providers=['CPUExecutionProvider'])
-app.prepare(ctx_id=0, det_size=(640, 640))
-img = ins_get_image('t1')
-faces = app.get(img)
-for face in faces:
-    print(face)
-rimg = app.draw_on(img, faces)
-cv2.imwrite("./io/output/t1_output.jpg", rimg)
+    result = app.draw_on(image, faces)
+    output_file_path = os.path.join(args.output, os.path.basename(args.input))
+    cv2.imwrite(output_file_path, result)

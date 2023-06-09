@@ -1,7 +1,6 @@
 import numpy as np
 from scipy.spatial import distance
 from insightface.app import FaceAnalysis
-
 from src.utils import *
 import config
 

@@ -6,14 +6,14 @@ from insightface.app import FaceAnalysis
 
 
 parser = argparse.ArgumentParser(description='Face Identification - ArcFace with SCRFD')
-parser.add_argument("--input1", default="input/sajjad0.jpg", type=str, help="input image 1 path")
-parser.add_argument("--input2", default="input/sajjad1.jpg", type=str, help="input image 2 path")
+parser.add_argument("--input1", default="io/input/sajjad0.jpg", type=str, help="input image 1 path")
+parser.add_argument("--input2", default="io/input/sajjad1.jpg", type=str, help="input image 2 path")
 args = parser.parse_args()
 
 
 threshold = 20
 
-app = FaceAnalysis(providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
+app = FaceAnalysis(providers=["CUDAExecutionProvider", "CPUExecutionProvider"])
 app.prepare(ctx_id=0, det_size=(640, 640))
 print("Model loaded")
 

@@ -1,4 +1,3 @@
-import os
 import functools
 import time
 import numpy as np
@@ -43,12 +42,12 @@ def prepare_face_bank(recognizer, tta=True):
                 names.append(path.name)
     
     embeddings = np.array(embeddings)
-    np.save(os.path.join(config.face_bank_path, 'face_bank'), {"embeddings": embeddings, "names": names})
+    np.save('face_bank', {"embeddings": embeddings, "names": names})
     return embeddings, names
 
 
 def load_face_bank():
-    data = np.load(os.path.join(config.face_bank_path, 'face_bank.npy'), allow_pickle=True)
+    data = np.load('face_bank.npy', allow_pickle=True)
     embeddings = data.item().get('embeddings')
     names = data.item().get('names')
     return embeddings, names

@@ -37,7 +37,6 @@ if __name__ == '__main__':
         mimestart = mimestart.split('/')[0]
         if mimestart == 'image':
             image = cv2.imread(args.input)
-
             if not args.origin_size:
                 image = cv2.resize(image, (0, 0), fx=0.25, fy=0.25)
             image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -72,14 +71,11 @@ if __name__ == '__main__':
                 video_writer_fourcc = cv2.VideoWriter_fourcc(*'mp4v')
                 video_writer = cv2.VideoWriter(output_file_path, video_writer_fourcc, cap_fps, (width, height))
 
-            frame_count = 0
             while cap.isOpened():
                 tic = time.time()
                 ret, frame = cap.read()
                 if not ret:
                     break
-
-                frame_count += 1
 
                 if not args.origin_size:
                     frame = cv2.resize(frame, (0, 0), fx=0.5, fy=0.5)

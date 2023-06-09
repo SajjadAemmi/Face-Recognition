@@ -1,9 +1,6 @@
 # Face Recognition with Arcface
 
-Real-time face recognition in unconstrained environments. 
-Arcface is a efficient and effective face recognition algorithm, which can train on tens of millions identity on a single server.
-
-This module can get a number of names as input for tracking the specific face.
+Real-time face recognition in unconstrained environments, based on [InsightFace](https://github.com/deepinsight/insightface). 
 
 ## Installation
 

@@ -1,55 +1,40 @@
-import os
-from src.model import Backbone, Arcface, l2_norm
-from backbones.mobilefacenet import MobileFaceNet
-import torch
 import numpy as np
-from tqdm import tqdm
+from scipy.spatial import distance
+from insightface.app import FaceAnalysis
+
 from src.utils import *
 import config
 
 
-class FaceRecognizer(object):
-    def __init__(self, model_name, device):
+class Recognizer:
+    def __init__(self, model_name):
         self.threshold = config.recognition_threshold
-        self.device = device
+        self.app = FaceAnalysis(name=model_name, providers=["CUDAExecutionProvider", "CPUExecutionProvider"])
+        self.app.prepare(ctx_id=0, det_size=(640, 640))
 
-        if model_name == 'mobilenet':
-            # self.model = MobileFaceNet(config.embedding_size).to(self.device)
-            self.model = MobileFaceNet(False, config.embedding_size).to(self.device)
-            self.model.load_state_dict(torch.load(config.mobilenet_recognition_weights_path, map_location=self.device))
-        elif model_name == 'resnet50':
-            self.model = Backbone(config.net_depth, config.drop_ratio, config.net_mode).to(self.device)
-            self.model.load_state_dict(torch.load(config.resnet50_recognition_weights_path, map_location=self.device))
-         
-        self.model.eval()
-
-    def board_val(self, db_name, accuracy, best_threshold, roc_curve_tensor):
-        self.writer.add_scalar('{}_accuracy'.format(db_name), accuracy, self.step)
-        self.writer.add_scalar('{}_best_threshold'.format(db_name), best_threshold, self.step)
-        self.writer.add_image('{}_roc_curve'.format(db_name), roc_curve_tensor, self.step)
-#         self.writer.add_scalar('{}_val:true accept ratio'.format(db_name), val, self.step)
-#         self.writer.add_scalar('{}_val_std'.format(db_name), val_std, self.step)
-#         self.writer.add_scalar('{}_far:False Acceptance Ratio'.format(db_name), far, self.step)
-    
-    def get_emb(self, image_face, tta=False):
-        emb = self.model(config.test_transform(image_face).to(self.device).unsqueeze(0))
-        if tta:
-            mirror = cv2.flip(image_face, 1)
-            emb_mirror = self.model(config.test_transform(mirror).to(self.device).unsqueeze(0))
-            emb = l2_norm(emb + emb_mirror)
-        return emb
+    def get_emb(self, face_image, tta=False):
+        faces = self.app.get(face_image)
+        embs = []
+        bboxes = []
+        for face in faces:
+            embs.append(face['embedding'])
+            bboxes.append(face['bbox'])
+        return embs, bboxes
 
     @timer
-    def recognize(self, faces, target_embs, tta=False):
-        embs = []
-        for face in faces:
-            emb = self.get_emb(face, tta)
-            embs.append(emb)
+    def recognize(self, image, target_embs, tta=False):
+        source_embs, bboxes = self.get_emb(image)
+        source_embs = np.array(source_embs)
+        source_embs = np.expand_dims(source_embs, axis=2)
 
-        source_embs = torch.cat(embs)
-        diff = source_embs.unsqueeze(-1) - target_embs.transpose(1, 0).unsqueeze(0)
+        target_embs = target_embs.transpose(1, 0)
+        target_embs = np.expand_dims(target_embs, axis=0)
 
-        dist = torch.mean(torch.pow(diff, 2), dim=1)
-        minimum, min_idx = torch.min(dist, dim=1)
-        min_idx[minimum > self.threshold] = -1  # if no match, set idx to -1
-        return min_idx
+        # dist = distance.euclidean(source_embs, target_embs)
+        diff = source_embs - target_embs
+        dist = np.mean(np.power(diff, 2), axis=1)
+
+        min_idx = np.argmin(dist ,axis=1)
+        min_val = dist[np.arange(dist.shape[0]), min_idx]
+        min_idx[min_val > self.threshold] = -1  # if no match, set idx to -1
+        return min_idx, bboxes

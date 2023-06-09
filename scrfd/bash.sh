@@ -1,1 +1,0 @@
-python3 scrfd2onnx.py configs/scrfd/scrfd_10g_bnkps.py weights/SCRFD_10G_KPS.pth --input-img IO/input/test.jpg

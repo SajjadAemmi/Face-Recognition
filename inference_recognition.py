@@ -30,7 +30,9 @@ if __name__ == '__main__':
         targets, names = load_face_bank()
         print('face bank loaded')
 
-    output_file_path = os.path.join(args.output, os.path.basename(args.input))
+    if args.save:
+        os.makedirs(args.output, exist_ok=True)
+        output_file_path = os.path.join(args.output, os.path.basename(args.input))
 
     mimestart = mimetypes.guess_type(args.input)[0]
     if mimestart != None:
@@ -103,6 +105,7 @@ if __name__ == '__main__':
             cap.release()
             if args.save:
                 video_writer.release()
-            cv2.destroyAllWindows()
+            if args.show:
+                cv2.destroyAllWindows()
 
     print('finish!')

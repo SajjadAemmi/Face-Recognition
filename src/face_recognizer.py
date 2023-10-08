@@ -24,6 +24,9 @@ class Recognizer:
     def recognize(self, image, target_embs, tta=False):
         source_embs, bboxes = self.get_emb(image)
         source_embs = np.array(source_embs)
+        if len(source_embs) == 0:
+            return [], []
+
         source_embs = np.expand_dims(source_embs, axis=2)
 
         target_embs = target_embs.transpose(1, 0)

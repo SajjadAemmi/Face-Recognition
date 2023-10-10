@@ -34,13 +34,18 @@ if __name__ == '__main__':
         os.makedirs(args.output, exist_ok=True)
         output_file_path = os.path.join(args.output, os.path.basename(args.input))
 
-    webcam_is_available = args.input.isdigit()    
+    if args.input.isdigit():
+        webcam_is_available = True
+        mimestart = None
+    else:
+        webcam_is_available = False
+        mimestart = mimetypes.guess_type(args.input)[0]
+        if mimestart == None:
+            print('input not found!')
+            exit()
+        else:
+            mimestart = mimestart.split('/')[0]
 
-    mimestart = mimetypes.guess_type(args.input)[0]
-    if mimestart == None and not webcam_is_available:
-        print('input not found!')
-
-    mimestart = mimestart.split('/')[0]
     if mimestart == 'image':
         image = cv2.imread(args.input)
         if not args.origin_size:
